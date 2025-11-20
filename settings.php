@@ -571,6 +571,19 @@ include INCLUDES_PATH . '/templates/header.php';
                 })
             });
 
+            // Sprawdź czy response jest poprawny
+            if (!response.ok) {
+                throw new Error('Błąd serwera: ' + response.status);
+            }
+
+            // Sprawdź czy response jest JSON-em
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                const text = await response.text();
+                console.error('Otrzymano nie-JSON response:', text);
+                throw new Error('Serwer zwrócił niepoprawną odpowiedź (nie JSON)');
+            }
+
             const data = await response.json();
 
             // Step 3: Budowanie (60%)

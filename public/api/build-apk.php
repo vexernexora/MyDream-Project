@@ -5,7 +5,17 @@
 
 declare(strict_types=1);
 
+// Wyłącz wyświetlanie błędów, aby nie zepsuć JSON response
+ini_set('display_errors', '0');
+error_reporting(E_ALL);
+
+// Start output buffering - przechwytuj wszystkie outputy
+ob_start();
+
 require_once __DIR__ . '/../../config.php';
+
+// Wyczyść bufor przed wysłaniem JSON (usuń ewentualne błędy/ostrzeżenia)
+ob_clean();
 
 header('Content-Type: application/json');
 
@@ -190,7 +200,10 @@ try {
     http_response_code(500);
     echo json_encode([
         'error' => $e->getMessage(),
-        'trace' => DEBUG ? $e->getTraceAsString() : null
+        'trace' => (defined('DEBUG_MODE') && DEBUG_MODE) ? $e->getTraceAsString() : null
     ]);
-    debug_log("Błąd w build-apk.php: " . $e->getMessage());
+
+    if (function_exists('debug_log')) {
+        debug_log("Błąd w build-apk.php: " . $e->getMessage());
+    }
 }
