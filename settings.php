@@ -571,11 +571,6 @@ include INCLUDES_PATH . '/templates/header.php';
                 })
             });
 
-            // Sprawdź czy response jest poprawny
-            if (!response.ok) {
-                throw new Error('Błąd serwera: ' + response.status);
-            }
-
             // Sprawdź czy response jest JSON-em
             const contentType = response.headers.get('content-type');
             if (!contentType || !contentType.includes('application/json')) {
@@ -585,6 +580,18 @@ include INCLUDES_PATH . '/templates/header.php';
             }
 
             const data = await response.json();
+
+            // Loguj szczegóły błędu do konsoli
+            if (!response.ok || data.error) {
+                console.error('API Error Details:', data);
+            }
+
+            // Jeśli response nie OK, rzuć błąd ze szczegółami
+            if (!response.ok) {
+                const errorMsg = data.error || 'Błąd serwera: ' + response.status;
+                const errorDetails = data.file && data.line ? ` (${data.file}:${data.line})` : '';
+                throw new Error(errorMsg + errorDetails);
+            }
 
             // Step 3: Budowanie (60%)
             statusText.textContent = 'Budowanie APK...';
