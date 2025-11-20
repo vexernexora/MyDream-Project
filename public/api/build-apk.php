@@ -32,6 +32,19 @@ try {
         exit;
     }
 
+    // Sprawdź czy funkcja exec() jest dostępna (często wyłączona na hostingu)
+    if (!function_exists('exec')) {
+        echo json_encode([
+            'success' => false,
+            'download_config' => true,
+            'message' => 'Budowanie APK na serwerze jest niemożliwe (brak uprawnień). Pobierz konfigurację aby zbudować APK lokalnie na swoim komputerze.',
+            'node_available' => false,
+            'cordova_available' => false,
+            'reason' => 'exec_disabled'
+        ]);
+        exit;
+    }
+
     // Sprawdź czy Node.js i Cordova są dostępne
     $nodeAvailable = false;
     $cordovaAvailable = false;

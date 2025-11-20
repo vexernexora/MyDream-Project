@@ -102,7 +102,14 @@ try {
 } catch (Exception $e) {
     http_response_code(500);
     echo json_encode([
-        'error' => 'Błąd podczas skanowania: ' . $e->getMessage()
+        'success' => false,
+        'error' => 'Błąd podczas skanowania: ' . $e->getMessage(),
+        'file' => basename($e->getFile()),
+        'line' => $e->getLine(),
+        'trace' => (defined('DEBUG_MODE') && DEBUG_MODE) ? $e->getTraceAsString() : null
     ]);
-    debug_log("Błąd w scan.php: " . $e->getMessage());
+
+    if (function_exists('debug_log')) {
+        debug_log("Błąd w scan.php: " . $e->getMessage() . " w " . $e->getFile() . ":" . $e->getLine());
+    }
 }
