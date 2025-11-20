@@ -623,4 +623,11 @@ include INCLUDES_PATH . '/templates/header.php';
     }
 </script>
 
+<!-- Thumbnail Generator -->
+<script>
+    // Przekaż dane filmów do generatora miniaturek
+    window.videos = <?= json_encode($videos) ?>;
+</script>
+<script src="/public/js/thumbnail-generator.js"></script>
+
 <?php include INCLUDES_PATH . '/templates/footer.php'; ?>

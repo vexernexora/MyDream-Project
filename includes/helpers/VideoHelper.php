@@ -149,9 +149,9 @@ class VideoHelper
     public static function generateThumbnail(string $videoPath, string $outputPath, float $timestamp = 0): bool
     {
         if (!self::isExecAvailable() || !self::isFFmpegAvailable()) {
-            debug_log("FFmpeg nie jest dostępny - generuję prostą miniaturkę");
-            // Wygeneruj prostą miniaturkę z GD (gradient + nazwa)
-            return self::generateSimpleThumbnail($videoPath, $outputPath);
+            debug_log("FFmpeg nie jest dostępny - miniatury będą wygenerowane przez przeglądarkę");
+            // NIE generuj - zostaw to JavaScript (thumbnail-generator.js)
+            return false;
         }
 
         if (!file_exists($videoPath)) {
