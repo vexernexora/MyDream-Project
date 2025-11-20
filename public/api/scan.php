@@ -30,12 +30,24 @@ try {
     $existingVideos = JsonHelper::getVideos();
     $existingFilenames = array_column($existingVideos, 'filename');
 
+    // Pobierz blacklistę (ręcznie usunięte filmy)
+    $blacklistFile = DATA_PATH . '/deleted_videos.json';
+    $blacklist = [];
+    if (file_exists($blacklistFile)) {
+        $blacklist = json_decode(file_get_contents($blacklistFile), true) ?? [];
+    }
+
     $newVideos = [];
     $processed = 0;
 
     foreach ($files as $file) {
         // Sprawdź czy film już istnieje
         if (in_array($file['filename'], $existingFilenames)) {
+            continue;
+        }
+
+        // Sprawdź czy film jest na blackliście (został ręcznie usunięty)
+        if (in_array($file['filename'], $blacklist)) {
             continue;
         }
 

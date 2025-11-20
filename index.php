@@ -657,9 +657,26 @@ include INCLUDES_PATH . '/templates/header.php';
                 </div>
             </div>
 
-            <p class="text-dark-textSecondary mb-6" id="deleteModalText">
-                Czy na pewno chcesz usunąć ten film z biblioteki?
+            <p class="text-dark-textSecondary mb-4" id="deleteModalText">
+                Czy na pewno chcesz usunąć ten film?
             </p>
+
+            <div class="space-y-3 mb-6">
+                <label class="flex items-start gap-3 p-3 bg-dark-tertiary rounded-lg cursor-pointer hover:bg-dark-border transition">
+                    <input type="radio" name="deleteType" value="library" checked class="mt-1">
+                    <div class="flex-1">
+                        <div class="font-medium text-dark-text">Tylko z biblioteki</div>
+                        <div class="text-sm text-dark-textSecondary">Ukryj film - plik pozostanie na dysku. Nie pojawi się ponownie po skanowaniu.</div>
+                    </div>
+                </label>
+                <label class="flex items-start gap-3 p-3 bg-dark-tertiary rounded-lg cursor-pointer hover:bg-dark-border transition">
+                    <input type="radio" name="deleteType" value="permanent" class="mt-1">
+                    <div class="flex-1">
+                        <div class="font-medium text-red-400">Usuń plik z dysku</div>
+                        <div class="text-sm text-dark-textSecondary">Kasuj na stałe - plik wideo zostanie usunięty (nieodwracalne!).</div>
+                    </div>
+                </label>
+            </div>
 
             <div class="flex gap-3">
                 <button
@@ -685,7 +702,7 @@ let videoToDelete = null;
 function confirmDeleteVideo(videoId, videoTitle) {
     videoToDelete = videoId;
     document.getElementById('deleteModalText').textContent =
-        `Czy na pewno chcesz usunąć "${videoTitle}" z biblioteki? Film zostanie usunięty tylko z listy, plik wideo pozostanie na dysku.`;
+        `Film: "${videoTitle}"`;
     document.getElementById('deleteModal').classList.remove('hidden');
 }
 
@@ -698,15 +715,23 @@ async function deleteVideo() {
     if (!videoToDelete) return;
 
     const videoId = videoToDelete;
+
+    // Pobierz wybrany typ usuwania
+    const deleteType = document.querySelector('input[name="deleteType"]:checked').value;
+    const deletePermanent = deleteType === 'permanent';
+
     closeDeleteModal();
 
-    showLoading('Usuwanie', 'Usuwanie filmu z biblioteki...');
+    showLoading('Usuwanie', deletePermanent ? 'Usuwanie pliku z dysku...' : 'Usuwanie z biblioteki...');
 
     try {
         const response = await fetch('/public/api/delete-video.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id: videoId })
+            body: JSON.stringify({
+                id: videoId,
+                delete_file: deletePermanent
+            })
         });
 
         const data = await response.json();
@@ -714,7 +739,7 @@ async function deleteVideo() {
         hideLoading();
 
         if (data.success) {
-            showToast('Film usunięty', 'success');
+            showToast(deletePermanent ? 'Film usunięty z dysku' : 'Film ukryty', 'success');
 
             // Usuń kartę filmu z DOM
             const card = document.querySelector(`[data-video-id="${videoId}"]`);

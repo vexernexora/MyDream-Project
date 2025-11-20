@@ -22,6 +22,23 @@ try {
     }
 
     $videoId = $input['id'];
+    $deleteFile = $input['delete_file'] ?? false;
+
+    // Pobierz dane filmu
+    $video = null;
+    $videos = JsonHelper::getVideos();
+    foreach ($videos as $v) {
+        if ($v['id'] === $videoId) {
+            $video = $v;
+            break;
+        }
+    }
+
+    if (!$video) {
+        http_response_code(404);
+        echo json_encode(['error' => 'Film nie znaleziony']);
+        exit;
+    }
 
     // Usuń miniaturkę jeśli istnieje
     $thumbnailPath = VideoHelper::getThumbnailPath($videoId);
@@ -29,11 +46,33 @@ try {
         unlink($thumbnailPath);
     }
 
+    // Jeśli usuwanie fizyczne - usuń plik wideo
+    if ($deleteFile) {
+        $videoPath = VIDEOS_PATH . '/' . $video['relative_path'];
+        if (file_exists($videoPath)) {
+            unlink($videoPath);
+        }
+    } else {
+        // Tylko z biblioteki - dodaj do blacklisty
+        $blacklistFile = DATA_PATH . '/deleted_videos.json';
+        $blacklist = [];
+
+        if (file_exists($blacklistFile)) {
+            $blacklist = json_decode(file_get_contents($blacklistFile), true) ?? [];
+        }
+
+        // Dodaj filename do blacklisty
+        if (!in_array($video['filename'], $blacklist)) {
+            $blacklist[] = $video['filename'];
+            file_put_contents($blacklistFile, json_encode($blacklist, JSON_PRETTY_PRINT));
+        }
+    }
+
     // Usuń z JSON
     if (JsonHelper::deleteVideo($videoId)) {
         echo json_encode([
             'success' => true,
-            'message' => 'Film usunięty z biblioteki'
+            'message' => $deleteFile ? 'Film usunięty z dysku' : 'Film ukryty (nie wróci po skanowaniu)'
         ]);
     } else {
         http_response_code(404);
