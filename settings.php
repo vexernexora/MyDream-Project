@@ -689,79 +689,59 @@ include INCLUDES_PATH . '/templates/header.php';
         }
 
         // Generuj i pobierz config.xml oraz instrukcje
-        const configXml = `<?xml version='1.0' encoding='utf-8'?>
-<widget id="${packageId}" version="${appVersion}" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
-    <name>${appName}</name>
-    <description>Lokalny odtwarzacz wideo offline w stylu YouTube</description>
-    <author email="dev@mydream.com" href="https://mydream.local">MyDream Team</author>
-    <content src="index.html" />
-    <allow-intent href="http://*/*" />
-    <allow-intent href="https://*/*" />
-    <allow-intent href="tel:*" />
-    <allow-intent href="sms:*" />
-    <allow-intent href="mailto:*" />
-    <allow-intent href="geo:*" />
-    <platform name="android">
-        <allow-intent href="market:*" />
-        <preference name="AndroidMinSdkVersion" value="22" />
-        <preference name="AndroidTargetSdkVersion" value="34" />
-    </platform>
-    <preference name="DisallowOverscroll" value="true" />
-    <preference name="BackupWebStorage" value="local" />
-    <preference name="Orientation" value="default" />
-</widget>`;
+        const configXml = '<?xml version=\'1.0\' encoding=\'utf-8\'?>\n' +
+            '<widget id="' + packageId + '" version="' + appVersion + '" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">\n' +
+            '    <name>' + appName + '</name>\n' +
+            '    <description>Lokalny odtwarzacz wideo offline w stylu YouTube</description>\n' +
+            '    <author email="dev@mydream.com" href="https://mydream.local">MyDream Team</author>\n' +
+            '    <content src="index.html" />\n' +
+            '    <allow-intent href="http://*/*" />\n' +
+            '    <allow-intent href="https://*/*" />\n' +
+            '    <allow-intent href="tel:*" />\n' +
+            '    <allow-intent href="sms:*" />\n' +
+            '    <allow-intent href="mailto:*" />\n' +
+            '    <allow-intent href="geo:*" />\n' +
+            '    <platform name="android">\n' +
+            '        <allow-intent href="market:*" />\n' +
+            '        <preference name="AndroidMinSdkVersion" value="22" />\n' +
+            '        <preference name="AndroidTargetSdkVersion" value="34" />\n' +
+            '    </platform>\n' +
+            '    <preference name="DisallowOverscroll" value="true" />\n' +
+            '    <preference name="BackupWebStorage" value="local" />\n' +
+            '    <preference name="Orientation" value="default" />\n' +
+            '</widget>';
 
-        const readme = `# Instrukcja budowania APK - ${appName}
-
-## Wymagania:
-- Node.js (https://nodejs.org/)
-- Android Studio lub Android SDK
-
-## Kroki:
-
-1. Zainstaluj Cordova globalnie:
-   npm install -g cordova
-
-2. Utwórz nowy projekt Cordova:
-   cordova create mydream-app ${packageId} "${appName}"
-   cd mydream-app
-
-3. Zastąp plik config.xml dołączonym plikiem config.xml
-
-4. Dodaj platformę Android:
-   cordova platform add android
-
-5. Skopiuj wszystkie pliki z twojej aplikacji webowej do folderu www/
-
-6. Zbuduj APK:
-   cordova build android
-
-7. APK znajdziesz w:
-   platforms/android/app/build/outputs/apk/debug/app-debug.apk
-
-## Opcjonalnie (wersja release):
-cordova build android --release
-
-Potem podpisz APK używając keytool i jarsigner.
-`;
+        const readme = '# Instrukcja budowania APK - ' + appName + '\n\n' +
+            '## Wymagania:\n' +
+            '- Node.js (https://nodejs.org/)\n' +
+            '- Android Studio lub Android SDK\n\n' +
+            '## Kroki:\n\n' +
+            '1. Zainstaluj Cordova globalnie:\n' +
+            '   npm install -g cordova\n\n' +
+            '2. Utwórz nowy projekt Cordova:\n' +
+            '   cordova create mydream-app ' + packageId + ' "' + appName + '"\n' +
+            '   cd mydream-app\n\n' +
+            '3. Zastąp plik config.xml dołączonym plikiem config.xml\n\n' +
+            '4. Dodaj platformę Android:\n' +
+            '   cordova platform add android\n\n' +
+            '5. Skopiuj wszystkie pliki z twojej aplikacji webowej do folderu www/\n\n' +
+            '6. Zbuduj APK:\n' +
+            '   cordova build android\n\n' +
+            '7. APK znajdziesz w:\n' +
+            '   platforms/android/app/build/outputs/apk/debug/app-debug.apk\n\n' +
+            '## Opcjonalnie (wersja release):\n' +
+            'cordova build android --release\n\n' +
+            'Potem podpisz APK używając keytool i jarsigner.\n';
 
         // Pobierz oba pliki jako ZIP
-        const zip = `
-config.xml:
-${configXml}
-
----
-
-README.txt:
-${readme}
-`;
+        const zip = '\nconfig.xml:\n' + configXml + '\n\n---\n\nREADME.txt:\n' + readme + '\n';
 
         // Utwórz i pobierz plik
         const blob = new Blob([zip], { type: 'text/plain' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `${packageId.replace(/\./g, '_')}_config.txt`;
+        a.download = packageId.replace(/\./g, '_') + '_config.txt';
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
