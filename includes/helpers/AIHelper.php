@@ -62,8 +62,12 @@ class AIHelper
         $title = preg_replace('/\s+/', ' ', $title);
         $title = trim($title);
 
-        // Kapitalizuj pierwszą literę każdego słowa
-        $title = mb_convert_case($title, MB_CASE_TITLE, 'UTF-8');
+        // Kapitalizuj pierwszą literę każdego słowa (fallback bez mbstring)
+        if (function_exists('mb_convert_case')) {
+            $title = mb_convert_case($title, MB_CASE_TITLE, 'UTF-8');
+        } else {
+            $title = ucwords(strtolower($title));
+        }
 
         return $title ?: 'Bez tytułu';
     }
