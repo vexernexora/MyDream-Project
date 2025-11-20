@@ -140,6 +140,53 @@ include INCLUDES_PATH . '/templates/header.php';
     </div>
 </div>
 
+<!-- Dashboard Sections (only when not filtering) -->
+<?php if (empty($search) && empty($selectedTags)): ?>
+    <div class="max-w-screen-2xl mx-auto px-2 sm:px-4 lg:px-6 py-4 lg:py-6">
+        <!-- Continue Watching -->
+        <div id="continueWatchingSection" class="mb-8" style="display: none;">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-xl lg:text-2xl font-bold">Kontynuuj oglądanie</h2>
+            </div>
+            <div id="continueWatchingGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 lg:gap-4">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+
+        <!-- Watch Later -->
+        <div id="watchLaterSection" class="mb-8" style="display: none;">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-xl lg:text-2xl font-bold">Do obejrzenia</h2>
+                <a href="/collections.php?view=watch-later" class="text-sm text-red-600 hover:text-red-500">Zobacz wszystkie</a>
+            </div>
+            <div id="watchLaterGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 lg:gap-4">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+
+        <!-- Favorites -->
+        <div id="favoritesSection" class="mb-8" style="display: none;">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-xl lg:text-2xl font-bold">Ulubione</h2>
+                <a href="/collections.php?view=favorites" class="text-sm text-red-600 hover:text-red-500">Zobacz wszystkie</a>
+            </div>
+            <div id="favoritesGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 lg:gap-4">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+
+        <!-- Top Rated -->
+        <div id="topRatedSection" class="mb-8" style="display: none;">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-xl lg:text-2xl font-bold">Najwyżej ocenione</h2>
+            </div>
+            <div id="topRatedGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 lg:gap-4">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+    </div>
+<?php endif; ?>
+
 <!-- Video Grid -->
 <div class="max-w-screen-2xl mx-auto px-2 sm:px-4 lg:px-6 py-4 lg:py-6">
     <?php if (empty($videos)): ?>
@@ -178,7 +225,7 @@ include INCLUDES_PATH . '/templates/header.php';
         <!-- Video Cards Grid - YouTube style -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 lg:gap-4">
             <?php foreach ($videos as $video): ?>
-                <div class="group cursor-pointer">
+                <div class="group cursor-pointer video-card" data-video-id="<?= htmlspecialchars($video['id']) ?>">
                     <a href="/watch.php?id=<?= htmlspecialchars($video['id']) ?>" class="block">
                         <!-- Thumbnail -->
                         <div class="relative rounded-xl overflow-hidden mb-3 bg-dark-secondary">
@@ -195,6 +242,10 @@ include INCLUDES_PATH . '/templates/header.php';
                             <span class="absolute bottom-2 right-2 bg-black bg-opacity-90 text-white text-xs font-semibold px-2 py-0.5 rounded">
                                 <?= htmlspecialchars($video['duration_formatted']) ?>
                             </span>
+                            <!-- Progress Bar (added by JS) -->
+                            <div class="video-progress-bar hidden absolute bottom-0 left-0 right-0 h-1 bg-gray-700 bg-opacity-50">
+                                <div class="h-full bg-red-600" style="width: 0%"></div>
+                            </div>
                         </div>
 
                         <!-- Video Info -->
@@ -223,6 +274,10 @@ include INCLUDES_PATH . '/templates/header.php';
                                             • <?= $video['width'] ?>x<?= $video['height'] ?>
                                         <?php endif; ?>
                                     </p>
+                                    <!-- Rating (added by JS) -->
+                                    <p class="video-rating-display text-yellow-500" style="display: none;"></p>
+                                    <!-- Progress (added by JS) -->
+                                    <p class="video-progress-text text-red-500" style="display: none;"></p>
                                 </div>
 
                                 <!-- Tags (tylko desktop) -->
@@ -283,9 +338,11 @@ include INCLUDES_PATH . '/templates/header.php';
     </div>
 </div>
 
+<script src="/public/js/useractions.js"></script>
 <script>
     // Store selected tags
     let selectedTags = <?= json_encode($selectedTags) ?>;
+    const hasActiveFilters = <?= json_encode(!empty($search) || !empty($selectedTags)) ?>;
 
     // Toggle filters panel on mobile
     function toggleFilters() {
@@ -305,6 +362,264 @@ include INCLUDES_PATH . '/templates/header.php';
     const totalEl = document.getElementById('totalVideos');
     if (totalEl) {
         totalEl.textContent = <?= count(JsonHelper::getVideos()) ?>;
+    }
+
+    // Load dashboard sections on page load
+    if (!hasActiveFilters) {
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadDashboardSections();
+        });
+    }
+
+    // Load all dashboard sections
+    async function loadDashboardSections() {
+        try {
+            // Load Continue Watching
+            await loadContinueWatching();
+
+            // Load Watch Later
+            await loadWatchLater();
+
+            // Load Favorites
+            await loadFavorites();
+
+            // Load Top Rated
+            await loadTopRated();
+        } catch (error) {
+            console.error('Error loading dashboard sections:', error);
+        }
+    }
+
+    // Load Continue Watching section
+    async function loadContinueWatching() {
+        try {
+            const response = await fetch('/public/api/progress.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'get_continue_watching', limit: 5 })
+            });
+            const data = await response.json();
+
+            if (data.success && data.continue_watching && data.continue_watching.length > 0) {
+                const section = document.getElementById('continueWatchingSection');
+                const grid = document.getElementById('continueWatchingGrid');
+                grid.innerHTML = data.continue_watching.map(item => createVideoCard(item.video, item.progress)).join('');
+                section.style.display = 'block';
+            }
+        } catch (error) {
+            console.error('Error loading continue watching:', error);
+        }
+    }
+
+    // Load Watch Later section
+    async function loadWatchLater() {
+        try {
+            const response = await fetch('/public/api/watch-later.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'get_all' })
+            });
+            const data = await response.json();
+
+            if (data.success && data.watch_later && data.watch_later.length > 0) {
+                const section = document.getElementById('watchLaterSection');
+                const grid = document.getElementById('watchLaterGrid');
+                grid.innerHTML = data.watch_later.slice(0, 5).map(item => createVideoCard(item.video)).join('');
+                section.style.display = 'block';
+            }
+        } catch (error) {
+            console.error('Error loading watch later:', error);
+        }
+    }
+
+    // Load Favorites section
+    async function loadFavorites() {
+        try {
+            const response = await fetch('/public/api/favorites.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'get_all' })
+            });
+            const data = await response.json();
+
+            if (data.success && data.favorites && data.favorites.length > 0) {
+                const section = document.getElementById('favoritesSection');
+                const grid = document.getElementById('favoritesGrid');
+                grid.innerHTML = data.favorites.slice(0, 5).map(item => createVideoCard(item.video)).join('');
+                section.style.display = 'block';
+            }
+        } catch (error) {
+            console.error('Error loading favorites:', error);
+        }
+    }
+
+    // Load Top Rated section
+    async function loadTopRated() {
+        try {
+            const response = await fetch('/public/api/rating.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'get_top_rated', limit: 5 })
+            });
+            const data = await response.json();
+
+            if (data.success && data.top_rated && data.top_rated.length > 0) {
+                const section = document.getElementById('topRatedSection');
+                const grid = document.getElementById('topRatedGrid');
+                grid.innerHTML = data.top_rated.map(item => createVideoCard(item.video, null, item.rating)).join('');
+                section.style.display = 'block';
+            }
+        } catch (error) {
+            console.error('Error loading top rated:', error);
+        }
+    }
+
+    // Create video card HTML
+    function createVideoCard(video, progress = null, rating = null) {
+        const thumbnailUrl = `/public/thumbnails/${video.id}.jpg`;
+        const progressPercentage = progress ? progress.percentage : 0;
+        const stars = rating ? '★'.repeat(rating) + '☆'.repeat(5 - rating) : '';
+
+        return `
+            <div class="group cursor-pointer">
+                <a href="/watch.php?id=${encodeURIComponent(video.id)}" class="block">
+                    <!-- Thumbnail -->
+                    <div class="relative rounded-xl overflow-hidden mb-3 bg-dark-secondary">
+                        <div class="aspect-video w-full">
+                            <img
+                                src="${thumbnailUrl}"
+                                alt="${escapeHtml(video.title)}"
+                                class="w-full h-full object-cover group-hover:opacity-90 transition-opacity"
+                                onerror="this.src='/public/img/no-thumbnail.jpg'"
+                                loading="lazy"
+                            >
+                        </div>
+                        <!-- Duration Badge -->
+                        <span class="absolute bottom-2 right-2 bg-black bg-opacity-90 text-white text-xs font-semibold px-2 py-0.5 rounded">
+                            ${escapeHtml(video.duration_formatted)}
+                        </span>
+                        ${progress ? `
+                            <!-- Progress Bar -->
+                            <div class="absolute bottom-0 left-0 right-0 h-1 bg-gray-700 bg-opacity-50">
+                                <div class="h-full bg-red-600" style="width: ${progressPercentage}%"></div>
+                            </div>
+                        ` : ''}
+                    </div>
+
+                    <!-- Video Info -->
+                    <div class="flex gap-3">
+                        <!-- Avatar -->
+                        <div class="hidden sm:block flex-shrink-0 w-9 h-9 rounded-full bg-red-600 flex items-center justify-center text-white font-bold text-sm">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M21.582,6.186c-0.23-0.86-0.908-1.538-1.768-1.768C18.254,4,12,4,12,4S5.746,4,4.186,4.418 c-0.86,0.23-1.538,0.908-1.768,1.768C2,7.746,2,12,2,12s0,4.254,0.418,5.814c0.23,0.86,0.908,1.538,1.768,1.768 C5.746,20,12,20,12,20s6.254,0,7.814-0.418c0.861-0.23,1.538-0.908,1.768-1.768C22,16.254,22,12,22,12S22,7.746,21.582,6.186z M10,15.464V8.536L16,12L10,15.464z"/>
+                            </svg>
+                        </div>
+
+                        <!-- Info -->
+                        <div class="flex-1 min-w-0">
+                            <h3 class="font-semibold text-sm lg:text-base mb-1 line-clamp-2 group-hover:text-white transition leading-snug">
+                                ${escapeHtml(video.title)}
+                            </h3>
+
+                            <!-- Meta -->
+                            <div class="text-dark-textSecondary text-xs lg:text-sm space-y-0.5">
+                                ${video.category ? `<p class="truncate">${escapeHtml(video.category)}</p>` : ''}
+                                <p>
+                                    ${escapeHtml(video.size_formatted)}
+                                    ${video.width && video.height ? `• ${video.width}x${video.height}` : ''}
+                                </p>
+                                ${rating ? `<p class="text-yellow-500">${stars}</p>` : ''}
+                                ${progress ? `<p class="text-red-500">${progressPercentage.toFixed(0)}% obejrzane</p>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        `;
+    }
+
+    // Helper function to escape HTML
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // Load progress and ratings for video cards in the main grid
+    document.addEventListener('DOMContentLoaded', async () => {
+        await loadVideoCardEnhancements();
+    });
+
+    async function loadVideoCardEnhancements() {
+        try {
+            // Get all video IDs from cards
+            const videoCards = document.querySelectorAll('.video-card');
+            if (videoCards.length === 0) return;
+
+            const videoIds = Array.from(videoCards).map(card => card.dataset.videoId);
+
+            // Load all progress data
+            const progressResponse = await fetch('/public/api/progress.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'get_continue_watching', limit: 100 })
+            });
+            const progressData = await progressResponse.json();
+
+            // Load all ratings
+            const ratingsResponse = await fetch('/public/api/rating.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'get_all' })
+            });
+            const ratingsData = await ratingsResponse.json();
+
+            // Create lookup maps
+            const progressMap = new Map();
+            if (progressData.success && progressData.continue_watching) {
+                progressData.continue_watching.forEach(item => {
+                    progressMap.set(item.video_id, item.progress);
+                });
+            }
+
+            const ratingsMap = new Map();
+            if (ratingsData.success && ratingsData.ratings) {
+                ratingsData.ratings.forEach(item => {
+                    ratingsMap.set(item.video_id, item.rating);
+                });
+            }
+
+            // Update each video card
+            videoCards.forEach(card => {
+                const videoId = card.dataset.videoId;
+
+                // Add progress bar if exists
+                const progress = progressMap.get(videoId);
+                if (progress) {
+                    const progressBar = card.querySelector('.video-progress-bar');
+                    const progressText = card.querySelector('.video-progress-text');
+                    if (progressBar && progressText) {
+                        progressBar.classList.remove('hidden');
+                        progressBar.querySelector('div').style.width = `${progress.percentage}%`;
+                        progressText.textContent = `${Math.round(progress.percentage)}% obejrzane`;
+                        progressText.style.display = 'block';
+                    }
+                }
+
+                // Add rating if exists
+                const rating = ratingsMap.get(videoId);
+                if (rating) {
+                    const ratingDisplay = card.querySelector('.video-rating-display');
+                    if (ratingDisplay) {
+                        const stars = '★'.repeat(rating) + '☆'.repeat(5 - rating);
+                        ratingDisplay.textContent = stars;
+                        ratingDisplay.style.display = 'block';
+                    }
+                }
+            });
+        } catch (error) {
+            console.error('Error loading video card enhancements:', error);
+        }
     }
 </script>
 

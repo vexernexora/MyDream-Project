@@ -5,7 +5,7 @@
 
 declare(strict_types=1);
 
-require_once __DIR__ . '/../config.php';
+require_once __DIR__ . '/config.php';
 
 // Pobierz ID filmu
 $videoId = $_GET['id'] ?? null;
@@ -46,17 +46,84 @@ include INCLUDES_PATH . '/templates/header.php';
     <!-- Main Video Column -->
     <div class="lg:col-span-2">
         <!-- Video Player -->
-        <div class="bg-dark-secondary rounded-lg overflow-hidden border border-dark-border mb-6">
+        <div id="videoPlayerContainer" class="bg-dark-secondary rounded-lg overflow-hidden border border-dark-border mb-6">
             <video
                 id="videoPlayer"
                 class="w-full"
                 controls
                 preload="metadata"
                 poster="<?= htmlspecialchars($thumbnailUrl) ?>"
+                data-video-id="<?= htmlspecialchars($videoId) ?>"
             >
                 <source src="<?= htmlspecialchars($videoPath) ?>" type="video/<?= htmlspecialchars($video['codec'] ?? 'mp4') ?>">
                 Twoja przeglądarka nie obsługuje odtwarzania wideo.
             </video>
+
+            <!-- Player Controls Overlay -->
+            <div class="bg-dark-bg p-3 border-t border-dark-border flex flex-wrap items-center justify-between gap-3">
+                <div class="flex items-center gap-2">
+                    <!-- Playback Speed -->
+                    <div class="relative" id="speedControlContainer">
+                        <button
+                            id="speedControlBtn"
+                            class="px-3 py-1.5 bg-dark-tertiary hover:bg-dark-border rounded text-sm transition flex items-center space-x-1"
+                            title="Prędkość odtwarzania"
+                        >
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                            </svg>
+                            <span id="speedValue">1x</span>
+                        </button>
+                        <div id="speedMenu" class="hidden absolute bottom-full mb-1 left-0 bg-dark-secondary border border-dark-border rounded-lg shadow-lg py-1 min-w-[100px]">
+                            <button class="speed-option w-full px-4 py-2 text-left hover:bg-dark-tertiary text-sm" data-speed="0.25">0.25x</button>
+                            <button class="speed-option w-full px-4 py-2 text-left hover:bg-dark-tertiary text-sm" data-speed="0.5">0.5x</button>
+                            <button class="speed-option w-full px-4 py-2 text-left hover:bg-dark-tertiary text-sm" data-speed="0.75">0.75x</button>
+                            <button class="speed-option w-full px-4 py-2 text-left hover:bg-dark-tertiary text-sm font-semibold" data-speed="1">Normalna (1x)</button>
+                            <button class="speed-option w-full px-4 py-2 text-left hover:bg-dark-tertiary text-sm" data-speed="1.25">1.25x</button>
+                            <button class="speed-option w-full px-4 py-2 text-left hover:bg-dark-tertiary text-sm" data-speed="1.5">1.5x</button>
+                            <button class="speed-option w-full px-4 py-2 text-left hover:bg-dark-tertiary text-sm" data-speed="1.75">1.75x</button>
+                            <button class="speed-option w-full px-4 py-2 text-left hover:bg-dark-tertiary text-sm" data-speed="2">2x</button>
+                        </div>
+                    </div>
+
+                    <!-- Theater Mode -->
+                    <button
+                        id="theaterModeBtn"
+                        class="px-3 py-1.5 bg-dark-tertiary hover:bg-dark-border rounded text-sm transition flex items-center space-x-1"
+                        title="Tryb kinowy (T)"
+                    >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z"/>
+                        </svg>
+                        <span>Kinowy</span>
+                    </button>
+
+                    <!-- Autoplay -->
+                    <button
+                        id="autoplayBtn"
+                        class="px-3 py-1.5 bg-dark-tertiary hover:bg-dark-border rounded text-sm transition flex items-center space-x-1"
+                        title="Automatyczne odtwarzanie"
+                    >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                        </svg>
+                        <span>Autoplay: <span id="autoplayStatus">Wyłączone</span></span>
+                    </button>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <!-- Keyboard Shortcuts Help -->
+                    <button
+                        id="keyboardHelpBtn"
+                        class="px-3 py-1.5 bg-dark-tertiary hover:bg-dark-border rounded text-sm transition"
+                        title="Skróty klawiszowe"
+                    >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
         </div>
 
         <!-- Video Info -->
@@ -114,6 +181,45 @@ include INCLUDES_PATH . '/templates/header.php';
                 <p class="text-dark-textSecondary">
                     <?= nl2br(htmlspecialchars($video['description'])) ?>
                 </p>
+            </div>
+
+            <!-- User Actions (Favorite, Watch Later, Rating) -->
+            <div class="mb-6 pb-6 border-b border-dark-border">
+                <div class="flex flex-wrap items-center gap-4">
+                    <!-- Favorite Button -->
+                    <button
+                        id="favoriteBtn"
+                        onclick="toggleFavorite('<?= htmlspecialchars($videoId) ?>', this)"
+                        class="px-4 py-2 bg-dark-tertiary hover:bg-dark-border rounded-lg transition flex items-center space-x-2"
+                        title="Dodaj do ulubionych"
+                    >
+                        <svg id="favoriteIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                        </svg>
+                        <span id="favoriteText">Dodaj do ulubionych</span>
+                    </button>
+
+                    <!-- Watch Later Button -->
+                    <button
+                        id="watchLaterBtn"
+                        onclick="toggleWatchLater('<?= htmlspecialchars($videoId) ?>', this)"
+                        class="px-4 py-2 bg-dark-tertiary hover:bg-dark-border rounded-lg transition flex items-center space-x-2"
+                        title="Dodaj do obejrzenia później"
+                    >
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <span id="watchLaterText">Do obejrzenia</span>
+                    </button>
+
+                    <!-- Rating Widget -->
+                    <div class="flex items-center space-x-2">
+                        <span class="text-sm text-dark-textSecondary">Twoja ocena:</span>
+                        <div id="ratingWidget" class="flex items-center space-x-1">
+                            <!-- Will be populated by JS -->
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Actions -->
@@ -251,6 +357,106 @@ include INCLUDES_PATH . '/templates/header.php';
     </div>
 </div>
 
+<!-- Keyboard Shortcuts Help Modal -->
+<div id="keyboardHelpModal" class="hidden fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-4">
+    <div class="bg-dark-secondary rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="p-6">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold">Skróty klawiszowe</h2>
+                <button onclick="closeKeyboardHelp()" class="text-dark-textSecondary hover:text-dark-text">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div class="space-y-3">
+                    <h3 class="font-semibold text-base mb-2">Odtwarzanie</h3>
+                    <div class="flex justify-between">
+                        <span class="text-dark-textSecondary">Odtwórz/Pauza</span>
+                        <kbd class="px-2 py-1 bg-dark-tertiary rounded">K</kbd>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-dark-textSecondary">Odtwórz/Pauza</span>
+                        <kbd class="px-2 py-1 bg-dark-tertiary rounded">Spacja</kbd>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-dark-textSecondary">Przewiń do tyłu 10s</span>
+                        <kbd class="px-2 py-1 bg-dark-tertiary rounded">J</kbd>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-dark-textSecondary">Przewiń do przodu 10s</span>
+                        <kbd class="px-2 py-1 bg-dark-tertiary rounded">L</kbd>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-dark-textSecondary">Przewiń -5s</span>
+                        <kbd class="px-2 py-1 bg-dark-tertiary rounded">←</kbd>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-dark-textSecondary">Przewiń +5s</span>
+                        <kbd class="px-2 py-1 bg-dark-tertiary rounded">→</kbd>
+                    </div>
+                </div>
+
+                <div class="space-y-3">
+                    <h3 class="font-semibold text-base mb-2">Prędkość</h3>
+                    <div class="flex justify-between">
+                        <span class="text-dark-textSecondary">Zwiększ prędkość</span>
+                        <kbd class="px-2 py-1 bg-dark-tertiary rounded">></kbd>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-dark-textSecondary">Zmniejsz prędkość</span>
+                        <kbd class="px-2 py-1 bg-dark-tertiary rounded"><</kbd>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-dark-textSecondary">Resetuj prędkość</span>
+                        <kbd class="px-2 py-1 bg-dark-tertiary rounded">R</kbd>
+                    </div>
+                </div>
+
+                <div class="space-y-3">
+                    <h3 class="font-semibold text-base mb-2">Głośność</h3>
+                    <div class="flex justify-between">
+                        <span class="text-dark-textSecondary">Wycisz/Odcisz</span>
+                        <kbd class="px-2 py-1 bg-dark-tertiary rounded">M</kbd>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-dark-textSecondary">Zwiększ głośność</span>
+                        <kbd class="px-2 py-1 bg-dark-tertiary rounded">↑</kbd>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-dark-textSecondary">Zmniejsz głośność</span>
+                        <kbd class="px-2 py-1 bg-dark-tertiary rounded">↓</kbd>
+                    </div>
+                </div>
+
+                <div class="space-y-3">
+                    <h3 class="font-semibold text-base mb-2">Widok</h3>
+                    <div class="flex justify-between">
+                        <span class="text-dark-textSecondary">Pełny ekran</span>
+                        <kbd class="px-2 py-1 bg-dark-tertiary rounded">F</kbd>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-dark-textSecondary">Tryb kinowy</span>
+                        <kbd class="px-2 py-1 bg-dark-tertiary rounded">T</kbd>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-dark-textSecondary">Przejdź do % filmu (0-9)</span>
+                        <kbd class="px-2 py-1 bg-dark-tertiary rounded">0-9</kbd>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-6 pt-6 border-t border-dark-border">
+                <p class="text-sm text-dark-textSecondary text-center">
+                    Naciśnij <kbd class="px-2 py-1 bg-dark-tertiary rounded mx-1">?</kbd> aby pokazać/ukryć tę pomoc
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Edit Modal -->
 <div id="editModal" class="hidden fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-4">
     <div class="bg-dark-secondary rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
@@ -330,8 +536,124 @@ include INCLUDES_PATH . '/templates/header.php';
     </div>
 </div>
 
+<script src="/public/js/useractions.js"></script>
+<script src="/public/js/player-controls.js"></script>
 <script>
     const videoId = <?= json_encode($videoId) ?>;
+    const similarVideos = <?= json_encode($similarVideos) ?>;
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', async () => {
+        const videoPlayer = document.getElementById('videoPlayer');
+
+        // Load user actions state (favorite, watch later)
+        await loadUserActionStates();
+
+        // Create rating widget
+        createRatingWidget('ratingWidget', videoId);
+
+        // Start progress tracking
+        startProgressTracking(videoId, videoPlayer);
+
+        // Check for existing progress and prompt to continue
+        checkAndPromptContinueWatching(videoId, videoPlayer);
+
+        // Initialize player controls
+        initializePlayerControls(videoPlayer);
+
+        // Add to history when video starts playing
+        videoPlayer.addEventListener('play', () => {
+            addToHistory(videoId);
+        }, { once: true });
+
+        // Setup keyboard shortcuts help
+        setupKeyboardShortcutsHelp();
+    });
+
+    // Load favorite and watch later states
+    async function loadUserActionStates() {
+        try {
+            // Check favorite status
+            const favResponse = await fetch('/public/api/favorites.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'check', video_id: videoId })
+            });
+            const favData = await favResponse.json();
+            if (favData.success && favData.is_favorite) {
+                updateFavoriteButton(true);
+            }
+
+            // Check watch later status
+            const wlResponse = await fetch('/public/api/watch-later.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'check', video_id: videoId })
+            });
+            const wlData = await wlResponse.json();
+            if (wlData.success && wlData.is_in_watch_later) {
+                updateWatchLaterButton(true);
+            }
+        } catch (error) {
+            console.error('Error loading user action states:', error);
+        }
+    }
+
+    // Update favorite button appearance
+    function updateFavoriteButton(isFavorite) {
+        const btn = document.getElementById('favoriteBtn');
+        const icon = document.getElementById('favoriteIcon');
+        const text = document.getElementById('favoriteText');
+
+        if (isFavorite) {
+            btn.classList.add('bg-red-600', 'hover:bg-red-700');
+            btn.classList.remove('bg-dark-tertiary', 'hover:bg-dark-border');
+            icon.setAttribute('fill', 'currentColor');
+            text.textContent = 'Ulubione';
+        } else {
+            btn.classList.remove('bg-red-600', 'hover:bg-red-700');
+            btn.classList.add('bg-dark-tertiary', 'hover:bg-dark-border');
+            icon.setAttribute('fill', 'none');
+            text.textContent = 'Dodaj do ulubionych';
+        }
+    }
+
+    // Update watch later button appearance
+    function updateWatchLaterButton(isInList) {
+        const btn = document.getElementById('watchLaterBtn');
+        const text = document.getElementById('watchLaterText');
+
+        if (isInList) {
+            btn.classList.add('bg-blue-600', 'hover:bg-blue-700');
+            btn.classList.remove('bg-dark-tertiary', 'hover:bg-dark-border');
+            text.textContent = 'Na liście';
+        } else {
+            btn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+            btn.classList.add('bg-dark-tertiary', 'hover:bg-dark-border');
+            text.textContent = 'Do obejrzenia';
+        }
+    }
+
+    // Setup keyboard shortcuts help modal
+    function setupKeyboardShortcutsHelp() {
+        const helpBtn = document.getElementById('keyboardHelpBtn');
+        helpBtn.addEventListener('click', () => {
+            document.getElementById('keyboardHelpModal').classList.remove('hidden');
+        });
+
+        // Also allow '?' key to toggle help
+        document.addEventListener('keydown', (e) => {
+            if (e.key === '?' && !e.target.matches('input, textarea')) {
+                e.preventDefault();
+                const modal = document.getElementById('keyboardHelpModal');
+                modal.classList.toggle('hidden');
+            }
+        });
+    }
+
+    function closeKeyboardHelp() {
+        document.getElementById('keyboardHelpModal').classList.add('hidden');
+    }
 
     function toggleTechnicalInfo() {
         const info = document.getElementById('technicalInfo');
