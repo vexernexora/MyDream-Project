@@ -7,16 +7,27 @@ require_once __DIR__ . '/common.php';
 
 $action = $_GET['action'] ?? $_POST['action'] ?? 'check';
 
-try {
-    // Sprawdź czy git jest dostępny
-    if (!function_exists('exec')) {
-        throw new Exception('Funkcja exec() jest wyłączona');
-    }
+// Sprawdź czy auto-update jest dostępny
+if (!function_exists('exec')) {
+    echo json_encode([
+        'success' => false,
+        'available' => false,
+        'error' => 'Auto-update niedostępny: funkcja exec() jest wyłączona na tym serwerze'
+    ]);
+    exit;
+}
 
-    exec('which git 2>&1', $output, $returnCode);
-    if ($returnCode !== 0) {
-        throw new Exception('Git nie jest zainstalowany');
-    }
+exec('which git 2>&1', $output, $returnCode);
+if ($returnCode !== 0) {
+    echo json_encode([
+        'success' => false,
+        'available' => false,
+        'error' => 'Auto-update niedostępny: git nie jest zainstalowany'
+    ]);
+    exit;
+}
+
+try {
 
     // Zmień katalog na główny folder projektu
     $projectPath = ROOT_PATH;

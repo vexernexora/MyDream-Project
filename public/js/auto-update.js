@@ -182,6 +182,18 @@ class AutoUpdater {
             const response = await fetch('/public/api/auto-update.php?action=check');
             const data = await response.json();
 
+            // Sprawdź czy auto-update jest w ogóle dostępny
+            if (data.available === false) {
+                console.log('ℹ️ Auto-update not available:', data.error);
+                // Wyłącz automatyczne sprawdzanie
+                this.stopAutoCheck();
+                if (showMessage) {
+                    this.showToast('Auto-update niedostępny na tym serwerze', 'info');
+                }
+                this.isChecking = false;
+                return;
+            }
+
             if (!data.success) {
                 throw new Error(data.error || 'Błąd sprawdzania aktualizacji');
             }
