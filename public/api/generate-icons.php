@@ -3,7 +3,7 @@
  * API: Generowanie ikon aplikacji w różnych rozmiarach
  */
 
-declare(strict_types=1);
+require_once __DIR__ . '/common.php';
 
 // Rozmiary ikon do wygenerowania
 $sizes = [16, 32, 57, 60, 72, 76, 96, 114, 120, 128, 144, 152, 180, 192, 384, 512];

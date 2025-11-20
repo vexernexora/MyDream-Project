@@ -3,11 +3,7 @@
  * API: Pobieranie listy filmów z filtrowaniem i sortowaniem
  */
 
-declare(strict_types=1);
-
-require_once __DIR__ . '/../../config.php';
-
-header('Content-Type: application/json');
+require_once __DIR__ . '/common.php';
 
 try {
     // Parametry z query string
