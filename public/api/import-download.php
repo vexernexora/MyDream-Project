@@ -273,7 +273,52 @@ while (time() < $maxTime) {
 unlink(__FILE__);
 
 function addVideoToDatabase($path, $filename, $size) {
-    // TODO: Dodaj film do bazy
+    try {
+        $relativePath = str_replace(VIDEOS_PATH . \'/\', \'\', $path);
+        $metadata = VideoHelper::getVideoMetadata($path);
+
+        $aiData = AIHelper::analyzeVideo([
+            \'filename\' => $filename,
+            \'path\' => $path,
+            \'size\' => $size
+        ], $metadata);
+
+        $videoId = VideoHelper::generateVideoId($filename);
+
+        $videoData = [
+            \'id\' => $videoId,
+            \'filename\' => $filename,
+            \'relative_path\' => $relativePath,
+            \'title\' => $aiData[\'title\'] ?? $filename,
+            \'description\' => $aiData[\'description\'] ?? \'\',
+            \'tags\' => $aiData[\'tags\'] ?? [],
+            \'category\' => $aiData[\'category\'] ?? \'Inne\',
+            \'duration_seconds\' => $metadata[\'duration\'] ?? 0,
+            \'duration_formatted\' => $metadata[\'duration_formatted\'] ?? \'0:00\',
+            \'size\' => $size,
+            \'size_formatted\' => VideoHelper::formatFileSize($size),
+            \'width\' => $metadata[\'width\'] ?? null,
+            \'height\' => $metadata[\'height\'] ?? null,
+            \'codec\' => $metadata[\'codec\'] ?? null,
+            \'fps\' => $metadata[\'fps\'] ?? null,
+            \'added_at\' => time(),
+            \'added_at_formatted\' => date(\'Y-m-d H:i:s\'),
+            \'thumbnail_generated\' => false,
+            \'source\' => \'download\'
+        ];
+
+        $thumbnailPath = VideoHelper::getThumbnailPath($videoId);
+        $timestamp = AIHelper::suggestThumbnailTimestamp([\'filename\' => $filename, \'path\' => $path], $metadata);
+
+        if (VideoHelper::generateThumbnail($path, $thumbnailPath, $timestamp)) {
+            $videoData[\'thumbnail_generated\'] = true;
+            $videoData[\'thumbnail_timestamp\'] = $timestamp;
+        }
+
+        JsonHelper::addVideo($videoData);
+    } catch (Exception $e) {
+        debug_log("Błąd dodawania pobranego filmu: " . $e->getMessage());
+    }
 }
 ';
 
