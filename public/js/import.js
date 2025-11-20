@@ -3,6 +3,90 @@
  */
 
 // ============================================
+// CHECK AVAILABLE TOOLS
+// ============================================
+
+let availableTools = {
+    megatools: false,
+    wget: false,
+    curl: false,
+    mega_available: false,
+    url_download_available: false
+};
+
+// Sprawdź dostępne narzędzia przy ładowaniu
+document.addEventListener('DOMContentLoaded', async () => {
+    try {
+        const response = await fetch('/public/api/check-tools.php');
+        const data = await response.json();
+
+        if (data.success) {
+            availableTools = data;
+            updateUIBasedOnTools();
+        }
+    } catch (error) {
+        console.error('Error checking tools:', error);
+    }
+});
+
+function updateUIBasedOnTools() {
+    // Jeśli Mega.nz nie jest dostępny, dodaj ostrzeżenie
+    if (!availableTools.mega_available) {
+        const megaTab = document.getElementById('tab-mega');
+        const megaContent = document.getElementById('content-mega');
+
+        if (megaTab) {
+            // Dodaj badge "Wymaga megatools"
+            const badge = document.createElement('span');
+            badge.className = 'ml-2 px-2 py-0.5 bg-yellow-600 text-xs rounded';
+            badge.textContent = '⚠';
+            badge.title = 'Wymaga zainstalowania megatools';
+            megaTab.appendChild(badge);
+        }
+
+        if (megaContent) {
+            // Dodaj ostrzeżenie w formularzu
+            const warningDiv = document.createElement('div');
+            warningDiv.className = 'mb-4 bg-yellow-900 bg-opacity-20 border border-yellow-600 rounded-lg p-4';
+            warningDiv.innerHTML = `
+                <div class="flex items-start gap-3">
+                    <svg class="w-6 h-6 text-yellow-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                    </svg>
+                    <div class="flex-1">
+                        <h4 class="font-semibold text-yellow-500 mb-1">Brak narzędzia megatools</h4>
+                        <p class="text-sm text-dark-textSecondary mb-2">
+                            Import z Mega.nz wymaga zainstalowania narzędzia <code class="bg-dark-bg px-2 py-0.5 rounded">megatools</code>.
+                        </p>
+                        <p class="text-xs text-dark-textSecondary">
+                            Instalacja: <code class="bg-dark-bg px-2 py-0.5 rounded">sudo apt install megatools</code>
+                            lub <code class="bg-dark-bg px-2 py-0.5 rounded">sudo yum install megatools</code>
+                        </p>
+                    </div>
+                </div>
+            `;
+
+            const form = megaContent.querySelector('form');
+            if (form) {
+                form.parentNode.insertBefore(warningDiv, form);
+            }
+        }
+    }
+
+    // Jeśli URL download nie jest dostępny
+    if (!availableTools.url_download_available) {
+        const urlTab = document.getElementById('tab-url');
+        if (urlTab) {
+            const badge = document.createElement('span');
+            badge.className = 'ml-2 px-2 py-0.5 bg-red-600 text-xs rounded';
+            badge.textContent = '✗';
+            badge.title = 'Brak wget/curl';
+            urlTab.appendChild(badge);
+        }
+    }
+}
+
+// ============================================
 // TAB SWITCHING
 // ============================================
 
@@ -206,6 +290,12 @@ function cancelUpload(uploadId) {
 document.getElementById('megaForm').addEventListener('submit', async (e) => {
     e.preventDefault();
 
+    // Sprawdź czy megatools jest dostępny
+    if (!availableTools.mega_available) {
+        showToast('⚠️ Brak narzędzia megatools. Zainstaluj: sudo apt install megatools', 'error');
+        return;
+    }
+
     const url = document.getElementById('megaUrl').value.trim();
     const filename = document.getElementById('megaFilename').value.trim();
 
@@ -355,6 +445,8 @@ function pollDownloadProgress(downloadId) {
                     } else if (data.error) {
                         showToast('Błąd pobierania: ' + data.error, 'error');
                         document.getElementById('download-' + downloadId).classList.add('border-red-600');
+                        // Aktualizuj status wizualnie
+                        updateDownloadProgress(downloadId, 0, 'error');
                     }
                 }
             }

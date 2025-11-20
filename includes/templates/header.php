@@ -178,6 +178,9 @@
             };
         }
     </script>
+
+    <!-- Auto Update System -->
+    <script src="/public/js/auto-update.js"></script>
 </head>
 <body class="bg-dark-bg text-dark-text min-h-screen">
     <!-- PWA Install Banner -->
