@@ -2,7 +2,7 @@
 <html lang="pl" class="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
     <title><?= $pageTitle ?? 'Moja Biblioteka Wideo' ?></title>
 
     <!-- Tailwind CSS CDN -->
@@ -17,9 +17,9 @@
                     colors: {
                         dark: {
                             bg: '#0f0f0f',
-                            secondary: '#1a1a1a',
+                            secondary: '#1f1f1f',
                             tertiary: '#272727',
-                            border: '#303030',
+                            border: '#3f3f3f',
                             text: '#f1f1f1',
                             textSecondary: '#aaaaaa'
                         }
@@ -33,7 +33,7 @@
     <style>
         * {
             scrollbar-width: thin;
-            scrollbar-color: #4a4a4a #1a1a1a;
+            scrollbar-color: #4a4a4a #0f0f0f;
         }
 
         *::-webkit-scrollbar {
@@ -42,7 +42,7 @@
         }
 
         *::-webkit-scrollbar-track {
-            background: #1a1a1a;
+            background: #0f0f0f;
         }
 
         *::-webkit-scrollbar-thumb {
@@ -55,84 +55,168 @@
         }
 
         .video-card {
-            transition: all 0.2s ease;
-        }
-
-        .video-card:hover {
-            transform: translateY(-4px);
-        }
-
-        .video-thumbnail {
-            aspect-ratio: 16/9;
-            background: #272727;
+            transition: all 0.15s ease;
         }
 
         .tag-badge {
-            transition: all 0.2s ease;
+            transition: all 0.15s ease;
         }
 
-        .tag-badge:hover {
-            transform: scale(1.05);
+        /* Smooth scrolling */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* Better line clamping */
+        .line-clamp-1 {
+            display: -webkit-box;
+            -webkit-line-clamp: 1;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .line-clamp-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .line-clamp-3 {
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        /* Better aspect ratio support */
+        .aspect-video {
+            aspect-ratio: 16 / 9;
         }
     </style>
 </head>
 <body class="bg-dark-bg text-dark-text min-h-screen">
-    <!-- Navigation -->
-    <nav class="bg-dark-secondary border-b border-dark-border sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-16">
+    <!-- Navigation - YouTube Style -->
+    <nav class="bg-dark-bg border-b border-dark-border sticky top-0 z-50">
+        <div class="flex items-center justify-between h-14 lg:h-16 px-4 lg:px-6">
+            <!-- Left: Menu + Logo -->
+            <div class="flex items-center gap-2 lg:gap-4">
+                <!-- Menu Button -->
+                <button onclick="toggleMobileMenu()" class="lg:hidden w-10 h-10 flex items-center justify-center hover:bg-dark-tertiary rounded-full transition">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                    </svg>
+                </button>
+
                 <!-- Logo -->
-                <div class="flex items-center">
-                    <a href="/public/index.php" class="flex items-center space-x-2 hover:opacity-80 transition">
-                        <svg class="w-8 h-8 text-red-600" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M21.582,6.186c-0.23-0.86-0.908-1.538-1.768-1.768C18.254,4,12,4,12,4S5.746,4,4.186,4.418 c-0.86,0.23-1.538,0.908-1.768,1.768C2,7.746,2,12,2,12s0,4.254,0.418,5.814c0.23,0.86,0.908,1.538,1.768,1.768 C5.746,20,12,20,12,20s6.254,0,7.814-0.418c0.861-0.23,1.538-0.908,1.768-1.768C22,16.254,22,12,22,12S22,7.746,21.582,6.186z M10,15.464V8.536L16,12L10,15.464z"/>
-                        </svg>
-                        <span class="text-xl font-bold">Moja Biblioteka</span>
-                    </a>
-                </div>
+                <a href="/index.php" class="flex items-center gap-1 lg:gap-2 hover:opacity-80 transition">
+                    <svg class="w-7 h-7 lg:w-9 lg:h-9 text-red-600" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M21.582,6.186c-0.23-0.86-0.908-1.538-1.768-1.768C18.254,4,12,4,12,4S5.746,4,4.186,4.418 c-0.86,0.23-1.538,0.908-1.768,1.768C2,7.746,2,12,2,12s0,4.254,0.418,5.814c0.23,0.86,0.908,1.538,1.768,1.768 C5.746,20,12,20,12,20s6.254,0,7.814-0.418c0.861-0.23,1.538-0.908,1.768-1.768C22,16.254,22,12,22,12S22,7.746,21.582,6.186z M10,15.464V8.536L16,12L10,15.464z"/>
+                    </svg>
+                    <span class="hidden sm:block text-lg lg:text-xl font-bold">MyTube</span>
+                </a>
+            </div>
 
-                <!-- Navigation Links -->
-                <div class="hidden md:flex items-center space-x-4">
-                    <a href="/public/index.php" class="px-4 py-2 rounded-lg hover:bg-dark-tertiary transition <?= $currentPage === 'home' ? 'bg-dark-tertiary' : '' ?>">
-                        Strona główna
-                    </a>
-                    <a href="/public/settings.php" class="px-4 py-2 rounded-lg hover:bg-dark-tertiary transition <?= $currentPage === 'settings' ? 'bg-dark-tertiary' : '' ?>">
-                        Ustawienia
-                    </a>
-                    <button onclick="scanLibrary()" class="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg transition flex items-center space-x-2">
+            <!-- Center: Search (Desktop Only) -->
+            <div class="hidden lg:flex flex-1 max-w-2xl mx-8">
+                <div class="relative w-full">
+                    <input
+                        type="text"
+                        id="searchInput"
+                        value="<?= htmlspecialchars($_GET['search'] ?? '') ?>"
+                        placeholder="Szukaj"
+                        class="w-full bg-dark-secondary text-dark-text border border-dark-border rounded-l-full px-6 py-2 focus:outline-none focus:border-blue-500"
+                        onkeyup="handleSearch(event)"
+                    >
+                    <button class="absolute right-0 top-0 h-full px-6 bg-dark-tertiary border border-dark-border border-l-0 rounded-r-full hover:bg-dark-border transition">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                        </svg>
-                        <span>Odśwież bibliotekę</span>
-                    </button>
-                </div>
-
-                <!-- Mobile Menu Button -->
-                <div class="md:hidden">
-                    <button onclick="toggleMobileMenu()" class="p-2 rounded-lg hover:bg-dark-tertiary transition">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                         </svg>
                     </button>
                 </div>
             </div>
-        </div>
 
-        <!-- Mobile Menu -->
-        <div id="mobileMenu" class="hidden md:hidden border-t border-dark-border">
-            <div class="px-2 pt-2 pb-3 space-y-1">
-                <a href="/public/index.php" class="block px-3 py-2 rounded-lg hover:bg-dark-tertiary transition">
-                    Strona główna
-                </a>
-                <a href="/public/settings.php" class="block px-3 py-2 rounded-lg hover:bg-dark-tertiary transition">
-                    Ustawienia
-                </a>
-                <button onclick="scanLibrary()" class="w-full text-left px-3 py-2 bg-red-600 hover:bg-red-700 rounded-lg transition">
-                    Odśwież bibliotekę
+            <!-- Right: Actions -->
+            <div class="flex items-center gap-2">
+                <!-- Refresh Button -->
+                <button
+                    onclick="scanLibrary()"
+                    class="w-10 h-10 flex items-center justify-center hover:bg-dark-tertiary rounded-full transition"
+                    title="Odśwież bibliotekę"
+                >
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
                 </button>
+
+                <!-- Settings -->
+                <a
+                    href="/settings.php"
+                    class="w-10 h-10 flex items-center justify-center hover:bg-dark-tertiary rounded-full transition"
+                    title="Ustawienia"
+                >
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                </a>
             </div>
         </div>
     </nav>
 
+    <!-- Mobile Sidebar Menu -->
+    <div id="mobileSidebar" class="hidden fixed inset-0 z-50 lg:hidden">
+        <!-- Overlay -->
+        <div class="absolute inset-0 bg-black bg-opacity-75" onclick="toggleMobileMenu()"></div>
+
+        <!-- Sidebar -->
+        <div class="absolute left-0 top-0 bottom-0 w-64 bg-dark-secondary overflow-y-auto">
+            <!-- Header -->
+            <div class="flex items-center gap-2 p-4 border-b border-dark-border">
+                <button onclick="toggleMobileMenu()" class="w-10 h-10 flex items-center justify-center hover:bg-dark-tertiary rounded-full transition">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                    </svg>
+                </button>
+                <svg class="w-8 h-8 text-red-600" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M21.582,6.186c-0.23-0.86-0.908-1.538-1.768-1.768C18.254,4,12,4,12,4S5.746,4,4.186,4.418 c-0.86,0.23-1.538,0.908-1.768,1.768C2,7.746,2,12,2,12s0,4.254,0.418,5.814c0.23,0.86,0.908,1.538,1.768,1.768 C5.746,20,12,20,12,20s6.254,0,7.814-0.418c0.861-0.23,1.538-0.908,1.768-1.768C22,16.254,22,12,22,12S22,7.746,21.582,6.186z M10,15.464V8.536L16,12L10,15.464z"/>
+                </svg>
+                <span class="text-lg font-bold">MyTube</span>
+            </div>
+
+            <!-- Menu Items -->
+            <div class="p-2">
+                <a href="/index.php" class="flex items-center gap-4 px-4 py-3 hover:bg-dark-tertiary rounded-lg transition <?= $currentPage === 'home' ? 'bg-dark-tertiary' : '' ?>">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                    </svg>
+                    <span>Strona główna</span>
+                </a>
+
+                <a href="/settings.php" class="flex items-center gap-4 px-4 py-3 hover:bg-dark-tertiary rounded-lg transition <?= $currentPage === 'settings' ? 'bg-dark-tertiary' : '' ?>">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                    <span>Ustawienia</span>
+                </a>
+
+                <button onclick="scanLibrary()" class="w-full flex items-center gap-4 px-4 py-3 hover:bg-dark-tertiary rounded-lg transition text-left">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                    <span>Odśwież bibliotekę</span>
+                </button>
+            </div>
+
+            <!-- Footer -->
+            <div class="p-4 mt-4 border-t border-dark-border">
+                <p class="text-xs text-dark-textSecondary">
+                    Filmów: <span id="sidebarTotalVideos">0</span>
+                </p>
+            </div>
+        </div>
+    </div>
+
     <!-- Main Content -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <main class="min-h-screen">

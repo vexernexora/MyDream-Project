@@ -8,6 +8,21 @@ declare(strict_types=1);
 class VideoHelper
 {
     /**
+     * Sprawdza czy funkcja exec jest dostępna
+     */
+    private static function isExecAvailable(): bool
+    {
+        static $available = null;
+
+        if ($available === null) {
+            $disabled = explode(',', ini_get('disable_functions'));
+            $available = !in_array('exec', $disabled) && function_exists('exec');
+        }
+
+        return $available;
+    }
+
+    /**
      * Skanuje folder videos i zwraca listę plików wideo
      */
     public static function scanVideosFolder(): array
@@ -47,9 +62,13 @@ class VideoHelper
      */
     public static function isFFmpegAvailable(): bool
     {
+        if (!self::isExecAvailable()) {
+            return false;
+        }
+
         $output = [];
         $returnVar = 0;
-        exec('ffmpeg -version 2>&1', $output, $returnVar);
+        @exec('ffmpeg -version 2>&1', $output, $returnVar);
         return $returnVar === 0;
     }
 
@@ -63,12 +82,29 @@ class VideoHelper
             return null;
         }
 
+        if (!self::isExecAvailable() || !self::isFFmpegAvailable()) {
+            // Fallback - podstawowe info bez FFmpeg
+            $fileSize = filesize($videoPath);
+            return [
+                'duration' => 0,
+                'duration_formatted' => '0:00',
+                'size' => $fileSize,
+                'size_formatted' => self::formatFileSize($fileSize),
+                'width' => null,
+                'height' => null,
+                'codec' => null,
+                'fps' => null,
+            ];
+        }
+
         $command = sprintf(
             'ffprobe -v quiet -print_format json -show_format -show_streams %s 2>&1',
             escapeshellarg($videoPath)
         );
 
-        exec($command, $output, $returnVar);
+        $output = [];
+        $returnVar = 0;
+        @exec($command, $output, $returnVar);
 
         if ($returnVar !== 0) {
             debug_log("FFprobe błąd dla: $videoPath");
@@ -112,8 +148,13 @@ class VideoHelper
      */
     public static function generateThumbnail(string $videoPath, string $outputPath, float $timestamp = 0): bool
     {
-        if (!self::isFFmpegAvailable()) {
-            debug_log("FFmpeg nie jest dostępny");
+        if (!self::isExecAvailable() || !self::isFFmpegAvailable()) {
+            debug_log("FFmpeg nie jest dostępny lub exec() wyłączony");
+            // Skopiuj placeholder
+            $placeholder = PUBLIC_PATH . '/img/no-thumbnail.jpg';
+            if (file_exists($placeholder)) {
+                copy($placeholder, $outputPath);
+            }
             return false;
         }
 
@@ -140,7 +181,9 @@ class VideoHelper
             escapeshellarg($outputPath)
         );
 
-        exec($command, $output, $returnVar);
+        $output = [];
+        $returnVar = 0;
+        @exec($command, $output, $returnVar);
 
         if ($returnVar !== 0 || !file_exists($outputPath)) {
             debug_log("Błąd generowania miniatury", ['output' => $output]);

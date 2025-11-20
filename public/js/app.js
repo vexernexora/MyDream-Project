@@ -82,8 +82,15 @@ function hideToast() {
  * Toggle mobile menu
  */
 function toggleMobileMenu() {
-    const menu = document.getElementById('mobileMenu');
-    menu.classList.toggle('hidden');
+    const sidebar = document.getElementById('mobileSidebar');
+    sidebar.classList.toggle('hidden');
+
+    // Update sidebar video count
+    const sidebarTotal = document.getElementById('sidebarTotalVideos');
+    const mainTotal = document.getElementById('totalVideos');
+    if (sidebarTotal && mainTotal) {
+        sidebarTotal.textContent = mainTotal.textContent;
+    }
 }
 
 // ============================================
