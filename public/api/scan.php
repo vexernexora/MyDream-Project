@@ -83,8 +83,11 @@ try {
             'ai_generated' => $aiData['ai_generated'] ?? false,
         ];
 
-        // NIE generuj miniaturki tutaj - zrób to async w tle
-        // Miniaturki będą generowane przez osobny endpoint lub przy pierwszym wyświetleniu
+        // Generuj prostą miniaturkę (bez FFmpeg - używa GD, szybkie!)
+        $thumbnailPath = VideoHelper::getThumbnailPath($videoId);
+        if (VideoHelper::generateThumbnail($file['path'], $thumbnailPath, 0)) {
+            $videoData['thumbnail_generated'] = true;
+        }
 
         // Dodaj do JSON
         if (JsonHelper::addVideo($videoData)) {

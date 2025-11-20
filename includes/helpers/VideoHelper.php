@@ -149,13 +149,9 @@ class VideoHelper
     public static function generateThumbnail(string $videoPath, string $outputPath, float $timestamp = 0): bool
     {
         if (!self::isExecAvailable() || !self::isFFmpegAvailable()) {
-            debug_log("FFmpeg nie jest dostępny lub exec() wyłączony");
-            // Skopiuj placeholder
-            $placeholder = PUBLIC_PATH . '/img/no-thumbnail.jpg';
-            if (file_exists($placeholder)) {
-                copy($placeholder, $outputPath);
-            }
-            return false;
+            debug_log("FFmpeg nie jest dostępny - generuję prostą miniaturkę");
+            // Wygeneruj prostą miniaturkę z GD (gradient + nazwa)
+            return self::generateSimpleThumbnail($videoPath, $outputPath);
         }
 
         if (!file_exists($videoPath)) {
@@ -192,6 +188,132 @@ class VideoHelper
 
         debug_log("Miniatura wygenerowana: $outputPath");
         return true;
+    }
+
+    /**
+     * Generuje prostą miniaturkę bez FFmpeg (gradient + tekst)
+     */
+    private static function generateSimpleThumbnail(string $videoPath, string $outputPath): bool
+    {
+        if (!function_exists('imagecreatetruecolor')) {
+            debug_log("GD library nie jest dostępna");
+            // Fallback - skopiuj placeholder
+            $placeholder = PUBLIC_PATH . '/img/no-thumbnail.jpg';
+            if (file_exists($placeholder)) {
+                copy($placeholder, $outputPath);
+                return true;
+            }
+            return false;
+        }
+
+        // Utwórz folder jeśli nie istnieje
+        $dir = dirname($outputPath);
+        if (!is_dir($dir)) {
+            mkdir($dir, 0755, true);
+        }
+
+        $width = 1280;
+        $height = 720;
+
+        // Stwórz obrazek
+        $image = imagecreatetruecolor($width, $height);
+
+        // Wygeneruj losowy kolor na podstawie nazwy pliku (zawsze ten sam dla tego pliku)
+        $filename = basename($videoPath);
+        $hash = md5($filename);
+        $hue = hexdec(substr($hash, 0, 2)) / 255;
+
+        // Konwertuj HSL na RGB dla ładnych kolorów
+        $color1 = self::hslToRgb($hue, 0.7, 0.3);
+        $color2 = self::hslToRgb($hue, 0.7, 0.2);
+
+        // Narysuj gradient
+        for ($i = 0; $i < $height; $i++) {
+            $ratio = $i / $height;
+            $r = $color1[0] + ($color2[0] - $color1[0]) * $ratio;
+            $g = $color1[1] + ($color2[1] - $color1[1]) * $ratio;
+            $b = $color1[2] + ($color2[2] - $color1[2]) * $ratio;
+
+            $color = imagecolorallocate($image, (int)$r, (int)$g, (int)$b);
+            imageline($image, 0, $i, $width, $i, $color);
+        }
+
+        // Dodaj tekst - nazwę pliku
+        $white = imagecolorallocate($image, 255, 255, 255);
+        $black = imagecolorallocate($image, 0, 0, 0);
+
+        // Nazwa bez rozszerzenia
+        $title = pathinfo($filename, PATHINFO_FILENAME);
+        if (strlen($title) > 40) {
+            $title = substr($title, 0, 37) . '...';
+        }
+
+        // Użyj wbudowanej czcionki lub TTF jeśli dostępna
+        $fontSize = 5; // Największa wbudowana czcionka (1-5)
+        $textWidth = imagefontwidth($fontSize) * strlen($title);
+        $textHeight = imagefontheight($fontSize);
+        $x = ($width - $textWidth) / 2;
+        $y = ($height - $textHeight) / 2;
+
+        // Cień
+        imagestring($image, $fontSize, $x + 2, $y + 2, $title, $black);
+        // Tekst
+        imagestring($image, $fontSize, $x, $y, $title, $white);
+
+        // Ikona play (trójkąt)
+        $playSize = 80;
+        $playX = $width / 2;
+        $playY = $height / 2 + 60;
+
+        $triangle = [
+            $playX - $playSize / 2, $playY - $playSize / 2,
+            $playX - $playSize / 2, $playY + $playSize / 2,
+            $playX + $playSize / 2, $playY
+        ];
+
+        // Cień play
+        $playTriangleShadow = array_map(function($v) { return $v + 3; }, $triangle);
+        imagefilledpolygon($image, $playTriangleShadow, 3, $black);
+
+        // Play button
+        imagefilledpolygon($image, $triangle, 3, $white);
+
+        // Zapisz
+        $result = imagejpeg($image, $outputPath, 85);
+        imagedestroy($image);
+
+        debug_log("Prosta miniatura wygenerowana: $outputPath");
+        return $result;
+    }
+
+    /**
+     * Konwertuje HSL na RGB
+     */
+    private static function hslToRgb(float $h, float $s, float $l): array
+    {
+        $c = (1 - abs(2 * $l - 1)) * $s;
+        $x = $c * (1 - abs(fmod($h * 6, 2) - 1));
+        $m = $l - $c / 2;
+
+        if ($h < 1/6) {
+            $rgb = [$c, $x, 0];
+        } elseif ($h < 2/6) {
+            $rgb = [$x, $c, 0];
+        } elseif ($h < 3/6) {
+            $rgb = [0, $c, $x];
+        } elseif ($h < 4/6) {
+            $rgb = [0, $x, $c];
+        } elseif ($h < 5/6) {
+            $rgb = [$x, 0, $c];
+        } else {
+            $rgb = [$c, 0, $x];
+        }
+
+        return [
+            ($rgb[0] + $m) * 255,
+            ($rgb[1] + $m) * 255,
+            ($rgb[2] + $m) * 255
+        ];
     }
 
     /**
