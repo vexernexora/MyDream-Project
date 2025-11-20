@@ -1,0 +1,48 @@
+# Offline Video App - Git Ignore
+
+# Videos folder (duże pliki)
+/videos/*
+!/videos/.gitkeep
+
+# Generated thumbnails
+/data/thumbnails/*
+!/data/thumbnails/.gitkeep
+
+# Cache
+/data/cache/*
+!/data/cache/.gitkeep
+
+# Database (opcjonalnie - możesz chcieć commitować pusty plik)
+# /data/videos.json
+
+# PHP
+*.log
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Temporary files
+*.tmp
+*.bak
+*.old
+
+# Environment variables
+.env
+.env.local
+
+# Composer (jeśli będzie używany)
+/vendor/
+
+# Node modules (jeśli będzie używany npm)
+node_modules/
+package-lock.json
+yarn.lock
+
+# OS
+Thumbs.db
+Desktop.ini
