@@ -689,7 +689,7 @@ include INCLUDES_PATH . '/templates/header.php';
         }
 
         // Generuj i pobierz config.xml oraz instrukcje
-        const configXml = '<?xml version=\'1.0\' encoding=\'utf-8\'?>\n' +
+        const configXml = '<' + '?xml version=\'1.0\' encoding=\'utf-8\'?' + '>\n' +
             '<widget id="' + packageId + '" version="' + appVersion + '" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">\n' +
             '    <name>' + appName + '</name>\n' +
             '    <description>Lokalny odtwarzacz wideo offline w stylu YouTube</description>\n' +
