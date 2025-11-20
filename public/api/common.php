@@ -12,8 +12,14 @@ error_reporting(E_ALL);
 // Start output buffering - przechwytuj wszystkie outputy
 ob_start();
 
-// Custom error handler - konwertuj błędy PHP na wyjątki
+// Custom error handler - konwertuj tylko poważne błędy PHP na wyjątki
 set_error_handler(function($errno, $errstr, $errfile, $errline) {
+    // Ignoruj drobne błędy (notices, warnings, deprecated)
+    if (in_array($errno, [E_NOTICE, E_USER_NOTICE, E_DEPRECATED, E_USER_DEPRECATED, E_STRICT])) {
+        return false; // Użyj domyślnego handlera
+    }
+
+    // Konwertuj tylko poważne błędy na wyjątki
     throw new ErrorException($errstr, 0, $errno, $errfile, $errline);
 });
 

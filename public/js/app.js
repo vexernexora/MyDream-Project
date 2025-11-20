@@ -12,7 +12,16 @@ async function safeFetchJSON(url, options = {}) {
     const text = await response.text();
 
     try {
-        return JSON.parse(text);
+        const data = JSON.parse(text);
+        // Loguj błędy API do konsoli
+        if (!response.ok || data.error || data.success === false) {
+            console.error(`API Error [${url}]:`, {
+                status: response.status,
+                data: data,
+                responseText: text.substring(0, 500)
+            });
+        }
+        return data;
     } catch (err) {
         console.error("Nieprawidłowa odpowiedź z backendu:", text);
         return {
