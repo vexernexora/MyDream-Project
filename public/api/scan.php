@@ -41,10 +41,20 @@ try {
 
         $processed++;
 
-        // Pobierz metadata z FFmpeg
-        $metadata = VideoHelper::getVideoMetadata($file['path']);
+        // Pobierz tylko podstawowe metadata (pomiń FFmpeg dla szybkości)
+        // Metadata będzie uzupełnione przy pierwszym odtworzeniu
+        $metadata = [
+            'duration' => 0,
+            'duration_formatted' => '0:00',
+            'size' => $file['size'],
+            'size_formatted' => VideoHelper::formatFileSize($file['size']),
+            'width' => null,
+            'height' => null,
+            'codec' => null,
+            'fps' => null,
+        ];
 
-        // Analizuj za pomocą AI
+        // Analizuj za pomocą AI (tylko z nazwy - szybkie)
         $aiData = AIHelper::analyzeVideo($file, $metadata);
 
         // Wygeneruj ID
@@ -73,14 +83,8 @@ try {
             'ai_generated' => $aiData['ai_generated'] ?? false,
         ];
 
-        // Generuj miniaturkę w tle
-        $thumbnailPath = VideoHelper::getThumbnailPath($videoId);
-        $timestamp = AIHelper::suggestThumbnailTimestamp($file, $metadata);
-
-        if (VideoHelper::generateThumbnail($file['path'], $thumbnailPath, $timestamp)) {
-            $videoData['thumbnail_generated'] = true;
-            $videoData['thumbnail_timestamp'] = $timestamp;
-        }
+        // NIE generuj miniaturki tutaj - zrób to async w tle
+        // Miniaturki będą generowane przez osobny endpoint lub przy pierwszym wyświetleniu
 
         // Dodaj do JSON
         if (JsonHelper::addVideo($videoData)) {
