@@ -242,6 +242,18 @@ include INCLUDES_PATH . '/templates/header.php';
                             <span class="absolute bottom-2 right-2 bg-black bg-opacity-90 text-white text-xs font-semibold px-2 py-0.5 rounded">
                                 <?= htmlspecialchars($video['duration_formatted']) ?>
                             </span>
+
+                            <!-- Delete Button -->
+                            <button
+                                onclick="event.preventDefault(); event.stopPropagation(); confirmDeleteVideo('<?= htmlspecialchars($video['id']) ?>', '<?= htmlspecialchars(addslashes($video['title'])) ?>')"
+                                class="absolute top-2 right-2 w-8 h-8 bg-red-600 hover:bg-red-700 rounded-full opacity-0 group-hover:opacity-100 transition flex items-center justify-center shadow-lg"
+                                title="Usuń film"
+                            >
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                </svg>
+                            </button>
+
                             <!-- Progress Bar (added by JS) -->
                             <div class="video-progress-bar hidden absolute bottom-0 left-0 right-0 h-1 bg-gray-700 bg-opacity-50">
                                 <div class="h-full bg-red-600" style="width: 0%"></div>
@@ -629,5 +641,106 @@ include INCLUDES_PATH . '/templates/header.php';
     window.videos = <?= json_encode($videos) ?>;
 </script>
 <script src="/public/js/thumbnail-generator.js"></script>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal" class="hidden fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-4">
+    <div class="bg-dark-secondary rounded-2xl max-w-md w-full overflow-hidden">
+        <div class="p-6">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-12 h-12 bg-red-600 bg-opacity-20 rounded-full flex items-center justify-center flex-shrink-0">
+                    <svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                </div>
+                <div class="flex-1">
+                    <h3 class="text-xl font-bold text-dark-text">Usuń film?</h3>
+                </div>
+            </div>
+
+            <p class="text-dark-textSecondary mb-6" id="deleteModalText">
+                Czy na pewno chcesz usunąć ten film z biblioteki?
+            </p>
+
+            <div class="flex gap-3">
+                <button
+                    onclick="closeDeleteModal()"
+                    class="flex-1 px-4 py-3 bg-dark-tertiary hover:bg-dark-border rounded-lg font-medium transition"
+                >
+                    Anuluj
+                </button>
+                <button
+                    onclick="deleteVideo()"
+                    class="flex-1 px-4 py-3 bg-red-600 hover:bg-red-700 rounded-lg font-medium transition"
+                >
+                    Usuń
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let videoToDelete = null;
+
+function confirmDeleteVideo(videoId, videoTitle) {
+    videoToDelete = videoId;
+    document.getElementById('deleteModalText').textContent =
+        `Czy na pewno chcesz usunąć "${videoTitle}" z biblioteki? Film zostanie usunięty tylko z listy, plik wideo pozostanie na dysku.`;
+    document.getElementById('deleteModal').classList.remove('hidden');
+}
+
+function closeDeleteModal() {
+    videoToDelete = null;
+    document.getElementById('deleteModal').classList.add('hidden');
+}
+
+async function deleteVideo() {
+    if (!videoToDelete) return;
+
+    const videoId = videoToDelete;
+    closeDeleteModal();
+
+    showLoading('Usuwanie', 'Usuwanie filmu z biblioteki...');
+
+    try {
+        const response = await fetch('/public/api/delete-video.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: videoId })
+        });
+
+        const data = await response.json();
+
+        hideLoading();
+
+        if (data.success) {
+            showToast('Film usunięty', 'success');
+
+            // Usuń kartę filmu z DOM
+            const card = document.querySelector(`[data-video-id="${videoId}"]`);
+            if (card) {
+                card.style.opacity = '0';
+                card.style.transform = 'scale(0.9)';
+                setTimeout(() => card.remove(), 300);
+            }
+
+            // Odśwież po 1 sekundzie
+            setTimeout(() => window.location.reload(), 1000);
+        } else {
+            showToast('Błąd: ' + data.error, 'error');
+        }
+    } catch (error) {
+        hideLoading();
+        showToast('Błąd połączenia: ' + error.message, 'error');
+    }
+}
+
+// Close modal on ESC
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && document.getElementById('deleteModal').classList.contains('hidden') === false) {
+        closeDeleteModal();
+    }
+});
+</script>
 
 <?php include INCLUDES_PATH . '/templates/footer.php'; ?>
