@@ -657,6 +657,8 @@ include INCLUDES_PATH . '/templates/header.php';
             } else {
                 // Błąd
                 resultDiv.className = 'mt-4 p-4 rounded-lg bg-red-900 bg-opacity-20 border border-red-900';
+                const errorDetails = data.file && data.line ? `<br><small class="text-xs opacity-75">Plik: ${data.file}:${data.line}</small>` : '';
+                const errorOutput = data.output ? `<pre class="mt-2 text-xs bg-black bg-opacity-30 p-2 rounded overflow-auto max-h-32">${data.output}</pre>` : '';
                 resultDiv.innerHTML = `
                     <div class="flex items-start gap-3">
                         <svg class="w-6 h-6 text-red-500 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -664,7 +666,8 @@ include INCLUDES_PATH . '/templates/header.php';
                         </svg>
                         <div class="flex-1">
                             <h4 class="font-semibold text-red-400 mb-2">Błąd podczas budowania</h4>
-                            <p class="text-sm text-dark-textSecondary">${data.error || 'Nie udało się zbudować APK'}</p>
+                            <p class="text-sm text-dark-textSecondary">${data.error || 'Nie udało się zbudować APK'}${errorDetails}</p>
+                            ${errorOutput}
                         </div>
                     </div>
                 `;
