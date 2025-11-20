@@ -26,8 +26,8 @@
                     <div class="flex flex-wrap gap-2">
                         <span class="px-2 py-1 bg-dark-tertiary rounded text-xs">PHP 8+</span>
                         <span class="px-2 py-1 bg-dark-tertiary rounded text-xs">TailwindCSS</span>
-                        <span class="px-2 py-1 bg-dark-tertiary rounded text-xs">FFmpeg</span>
-                        <span class="px-2 py-1 bg-dark-tertiary rounded text-xs">OpenAI</span>
+                        <span class="px-2 py-1 bg-dark-tertiary rounded text-xs">FFmpeg (opcjonalnie)</span>
+                        <span class="px-2 py-1 bg-dark-tertiary rounded text-xs">JSON Database</span>
                     </div>
                 </div>
             </div>

@@ -33,17 +33,13 @@ include INCLUDES_PATH . '/templates/header.php';
         <h2 class="text-xl font-bold mb-4">Status systemu</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div class="flex items-center space-x-3">
-                <div class="w-3 h-3 rounded-full <?= $ffmpegAvailable ? 'bg-green-500' : 'bg-red-500' ?>"></div>
+                <div class="w-3 h-3 rounded-full <?= $ffmpegAvailable ? 'bg-green-500' : 'bg-yellow-500' ?>"></div>
                 <div>
-                    <p class="text-sm text-dark-textSecondary">FFmpeg</p>
+                    <p class="text-sm text-dark-textSecondary">FFmpeg (opcjonalnie)</p>
                     <p class="font-semibold"><?= $ffmpegAvailable ? 'Dostępny' : 'Niedostępny' ?></p>
-                </div>
-            </div>
-            <div class="flex items-center space-x-3">
-                <div class="w-3 h-3 rounded-full <?= !empty(OPENAI_API_KEY) ? 'bg-green-500' : 'bg-yellow-500' ?>"></div>
-                <div>
-                    <p class="text-sm text-dark-textSecondary">OpenAI API</p>
-                    <p class="font-semibold"><?= !empty(OPENAI_API_KEY) ? 'Skonfigurowany' : 'Nie skonfigurowany' ?></p>
+                    <?php if (!$ffmpegAvailable): ?>
+                        <p class="text-xs text-dark-textSecondary mt-1">Miniatury nie będą generowane</p>
+                    <?php endif; ?>
                 </div>
             </div>
             <div class="flex items-center space-x-3">

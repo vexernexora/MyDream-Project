@@ -18,12 +18,7 @@ define('INCLUDES_PATH', ROOT_PATH . '/includes');
 // Plik z danymi filmów
 define('VIDEOS_JSON', DATA_PATH . '/videos.json');
 
-// Ustawienia AI (OpenAI API)
-// Ustaw swój klucz API w zmiennej środowiskowej lub tutaj
-define('OPENAI_API_KEY', getenv('OPENAI_API_KEY') ?: '');
-define('OPENAI_MODEL', 'gpt-4o-mini'); // Model do analizy filmów
-
-// Ustawienia miniaturek
+// Ustawienia miniaturek (opcjonalnie - wymaga FFmpeg)
 define('THUMBNAIL_WIDTH', 1280);
 define('THUMBNAIL_HEIGHT', 720);
 define('THUMBNAIL_QUALITY', 85);

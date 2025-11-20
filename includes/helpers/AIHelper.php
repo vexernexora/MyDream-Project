@@ -1,6 +1,7 @@
 <?php
 /**
- * AIHelper - Integracja z OpenAI do analizy filmów
+ * AIHelper - Proste generowanie metadanych z nazwy pliku
+ * (bez AI, bez OpenAI API)
  */
 
 declare(strict_types=1);
@@ -8,174 +9,40 @@ declare(strict_types=1);
 class AIHelper
 {
     /**
-     * Analizuje film i generuje metadata (tytuł, opis, tagi)
+     * Generuje metadata na podstawie nazwy pliku
      */
-    public static function analyzeVideo(array $fileInfo, ?array $metadata = null): ?array
+    public static function analyzeVideo(array $fileInfo, ?array $metadata = null): array
     {
-        $apiKey = OPENAI_API_KEY;
-
-        if (empty($apiKey)) {
-            debug_log("Brak klucza API OpenAI - używam domyślnych wartości");
-            return self::generateDefaultMetadata($fileInfo, $metadata);
-        }
-
-        // Przygotuj kontekst dla AI
-        $context = self::prepareVideoContext($fileInfo, $metadata);
-
-        // Wywołaj OpenAI API
-        $prompt = self::buildAnalysisPrompt($context);
-
-        try {
-            $response = self::callOpenAI($prompt, $apiKey);
-
-            if ($response) {
-                return self::parseAIResponse($response);
-            }
-        } catch (Exception $e) {
-            debug_log("Błąd AI: " . $e->getMessage());
-        }
-
-        // Fallback do domyślnych wartości
-        return self::generateDefaultMetadata($fileInfo, $metadata);
+        return self::generateMetadataFromFilename($fileInfo, $metadata);
     }
 
     /**
-     * Przygotowuje kontekst o filmie dla AI
+     * Generuje metadata z nazwy pliku
      */
-    private static function prepareVideoContext(array $fileInfo, ?array $metadata): array
-    {
-        return [
-            'filename' => $fileInfo['filename'] ?? 'unknown',
-            'size' => $fileInfo['size'] ?? 0,
-            'duration' => $metadata['duration_formatted'] ?? 'unknown',
-            'resolution' => isset($metadata['width'], $metadata['height'])
-                ? "{$metadata['width']}x{$metadata['height']}"
-                : 'unknown',
-            'codec' => $metadata['codec'] ?? 'unknown',
-        ];
-    }
-
-    /**
-     * Buduje prompt dla OpenAI
-     */
-    private static function buildAnalysisPrompt(array $context): string
-    {
-        $filename = $context['filename'];
-        $duration = $context['duration'];
-        $resolution = $context['resolution'];
-
-        return <<<PROMPT
-Jesteś ekspertem od analizy filmów. Na podstawie podanych informacji o pliku wideo, wygeneruj atrakcyjne metadata.
-
-Informacje o filmie:
-- Nazwa pliku: {$filename}
-- Czas trwania: {$duration}
-- Rozdzielczość: {$resolution}
-
-Zadanie:
-1. Wymyśl kreatywny, chwytliwy tytuł (po polsku), który brzmi profesjonalnie jak na YouTube
-2. Napisz krótki, ciekawy opis (2-3 zdania, po polsku)
-3. Wygeneruj 5-8 trafnych tagów opisujących potencjalną zawartość (po polsku)
-4. Określ prawdopodobną kategorię/typ filmu (np. vlog, tutorial, gaming, krajobraz, muzyka, sport, itp.)
-
-Odpowiedz TYLKO w formacie JSON:
-{
-  "title": "Tytuł filmu",
-  "description": "Opis filmu",
-  "tags": ["tag1", "tag2", "tag3", "tag4", "tag5"],
-  "category": "kategoria"
-}
-
-Bądź kreatywny i dopasuj metadata do nazwy pliku i charakterystyki technicznej.
-PROMPT;
-    }
-
-    /**
-     * Wywołuje OpenAI API
-     */
-    private static function callOpenAI(string $prompt, string $apiKey): ?string
-    {
-        $url = 'https://api.openai.com/v1/chat/completions';
-
-        $data = [
-            'model' => OPENAI_MODEL,
-            'messages' => [
-                [
-                    'role' => 'system',
-                    'content' => 'Jesteś pomocnym asystentem specjalizującym się w analizie i kategoryzacji filmów wideo. Zawsze odpowiadasz w formacie JSON.'
-                ],
-                [
-                    'role' => 'user',
-                    'content' => $prompt
-                ]
-            ],
-            'temperature' => 0.7,
-            'max_tokens' => 500,
-            'response_format' => ['type' => 'json_object']
-        ];
-
-        $ch = curl_init($url);
-        curl_setopt_array($ch, [
-            CURLOPT_POST => true,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_HTTPHEADER => [
-                'Content-Type: application/json',
-                'Authorization: Bearer ' . $apiKey
-            ],
-            CURLOPT_POSTFIELDS => json_encode($data),
-            CURLOPT_TIMEOUT => 30
-        ]);
-
-        $response = curl_exec($ch);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
-
-        if ($httpCode !== 200) {
-            debug_log("OpenAI API błąd: HTTP $httpCode", ['response' => $response]);
-            return null;
-        }
-
-        $result = json_decode($response, true);
-        return $result['choices'][0]['message']['content'] ?? null;
-    }
-
-    /**
-     * Parsuje odpowiedź AI
-     */
-    private static function parseAIResponse(string $response): array
-    {
-        $data = json_decode($response, true);
-
-        if (!$data) {
-            debug_log("Nie udało się sparsować odpowiedzi AI");
-            return [];
-        }
-
-        return [
-            'title' => $data['title'] ?? 'Bez tytułu',
-            'description' => $data['description'] ?? '',
-            'tags' => $data['tags'] ?? [],
-            'category' => $data['category'] ?? 'Inne',
-            'ai_generated' => true,
-        ];
-    }
-
-    /**
-     * Generuje domyślne metadata bez AI (fallback)
-     */
-    private static function generateDefaultMetadata(array $fileInfo, ?array $metadata): array
+    private static function generateMetadataFromFilename(array $fileInfo, ?array $metadata): array
     {
         $filename = pathinfo($fileInfo['filename'], PATHINFO_FILENAME);
 
-        // Prosta heurystyka na podstawie nazwy pliku
+        // Ładnie formatuj nazwę pliku na tytuł
         $title = self::beautifyFilename($filename);
+
+        // Wyciągnij potencjalne tagi z nazwy
         $tags = self::extractTagsFromFilename($filename);
+
+        // Określ kategorię na podstawie tagów
+        $category = self::determineCategory($tags, $filename);
+
+        // Prosty opis
+        $description = "Film: {$title}";
+        if ($metadata && isset($metadata['duration_formatted'])) {
+            $description .= " ({$metadata['duration_formatted']})";
+        }
 
         return [
             'title' => $title,
-            'description' => "Film wideo: {$title}",
+            'description' => $description,
             'tags' => $tags,
-            'category' => 'Wideo',
+            'category' => $category,
             'ai_generated' => false,
         ];
     }
@@ -185,26 +52,31 @@ PROMPT;
      */
     private static function beautifyFilename(string $filename): string
     {
-        // Usuń znaki specjalne, zamień na spacje
+        // Usuń typowe separatory i zastąp spacjami
         $title = preg_replace('/[_\-\.]+/', ' ', $filename);
+
+        // Usuń numery na końcu (np. " 001", " 1080p")
+        $title = preg_replace('/\s+\d+p?$/i', '', $title);
+
+        // Usuń zbędne spacje
         $title = preg_replace('/\s+/', ' ', $title);
         $title = trim($title);
 
-        // Kapitalizuj
+        // Kapitalizuj pierwszą literę każdego słowa
         $title = mb_convert_case($title, MB_CASE_TITLE, 'UTF-8');
 
         return $title ?: 'Bez tytułu';
     }
 
     /**
-     * Wyciąga potencjalne tagi z nazwy pliku
+     * Wyciąga tagi z nazwy pliku
      */
     private static function extractTagsFromFilename(string $filename): array
     {
         $tags = [];
         $filename = strtolower($filename);
 
-        // Słowa kluczowe
+        // Słowa kluczowe do rozpoznania
         $keywords = [
             'tutorial' => 'Tutorial',
             'vlog' => 'Vlog',
@@ -214,6 +86,7 @@ PROMPT;
             'test' => 'Test',
             'unboxing' => 'Unboxing',
             'music' => 'Muzyka',
+            'muzyka' => 'Muzyka',
             'live' => 'Live',
             'concert' => 'Koncert',
             'travel' => 'Podróże',
@@ -223,6 +96,15 @@ PROMPT;
             'timelapse' => 'Timelapse',
             '4k' => '4K',
             'hd' => 'HD',
+            'film' => 'Film',
+            'movie' => 'Film',
+            'comedy' => 'Komedia',
+            'funny' => 'Śmieszne',
+            'family' => 'Rodzinne',
+            'kids' => 'Dla dzieci',
+            'education' => 'Edukacja',
+            'howto' => 'Poradnik',
+            'diy' => 'DIY',
         ];
 
         foreach ($keywords as $key => $tag) {
@@ -231,17 +113,43 @@ PROMPT;
             }
         }
 
-        // Jeśli nie znaleziono żadnych tagów, dodaj domyślne
+        // Jeśli nie znaleziono żadnych tagów, dodaj domyślny
         if (empty($tags)) {
-            $tags = ['Wideo', 'Film'];
+            $tags = ['Wideo'];
         }
 
         return array_unique($tags);
     }
 
     /**
-     * Sugeruje najlepszy timestamp dla miniatury na podstawie analizy AI
-     * (uproszczona wersja - zwraca heurystyczny timestamp)
+     * Określa kategorię na podstawie tagów
+     */
+    private static function determineCategory(array $tags, string $filename): string
+    {
+        $categories = [
+            'Gaming' => ['gaming', 'gameplay'],
+            'Muzyka' => ['muzyka', 'music', 'concert'],
+            'Edukacja' => ['tutorial', 'howto', 'education', 'test'],
+            'Sport' => ['sport'],
+            'Vlog' => ['vlog', 'travel', 'podróże'],
+            'Film' => ['film', 'movie'],
+            'Komedia' => ['comedy', 'funny', 'śmieszne'],
+        ];
+
+        $filename = strtolower($filename);
+        foreach ($categories as $category => $keywords) {
+            foreach ($keywords as $keyword) {
+                if (in_array($keyword, array_map('strtolower', $tags)) || stripos($filename, $keyword) !== false) {
+                    return $category;
+                }
+            }
+        }
+
+        return 'Różne';
+    }
+
+    /**
+     * Nie używamy już AI do wyboru timestampu - zwracamy środek filmu
      */
     public static function suggestThumbnailTimestamp(array $fileInfo, ?array $metadata): float
     {
@@ -249,7 +157,7 @@ PROMPT;
             return 0;
         }
 
-        // Używamy VideoHelper do znajdowania najlepszego momentu
-        return VideoHelper::findBestThumbnailTimestamp($fileInfo['path']);
+        // Zwróć timestamp z środka filmu (bezpieczna opcja)
+        return $metadata['duration'] / 2;
     }
 }
