@@ -109,9 +109,77 @@ include INCLUDES_PATH . '/templates/header.php';
                         </svg>
                         <span>Autoplay: <span id="autoplayStatus">Wyłączone</span></span>
                     </button>
+
+                    <!-- Loop -->
+                    <button
+                        id="loopBtn"
+                        onclick="toggleLoop()"
+                        class="px-3 py-1.5 bg-dark-tertiary hover:bg-dark-border rounded text-sm transition"
+                        title="Zapętl wideo"
+                    >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                        </svg>
+                    </button>
                 </div>
 
                 <div class="flex items-center gap-2">
+                    <!-- Mini Player (PiP) -->
+                    <button
+                        onclick="togglePiP()"
+                        class="px-3 py-1.5 bg-dark-tertiary hover:bg-dark-border rounded text-sm transition"
+                        title="Mini player (I)"
+                    >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z"/>
+                        </svg>
+                    </button>
+
+                    <!-- Screenshot -->
+                    <button
+                        onclick="captureScreenshot()"
+                        class="px-3 py-1.5 bg-dark-tertiary hover:bg-dark-border rounded text-sm transition"
+                        title="Zrób screenshot (S)"
+                    >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
+                    </button>
+
+                    <!-- Stats for Nerds -->
+                    <button
+                        onclick="toggleStats()"
+                        class="px-3 py-1.5 bg-dark-tertiary hover:bg-dark-border rounded text-sm transition"
+                        title="Stats for Nerds (P)"
+                    >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                        </svg>
+                    </button>
+
+                    <!-- Cinema Mode -->
+                    <button
+                        onclick="toggleCinemaMode()"
+                        class="px-3 py-1.5 bg-dark-tertiary hover:bg-dark-border rounded text-sm transition"
+                        title="Tryb kina - zgaś światła (C)"
+                    >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                        </svg>
+                    </button>
+
+                    <!-- Share with Timestamp -->
+                    <button
+                        onclick="shareWithTimestamp()"
+                        class="px-3 py-1.5 bg-dark-tertiary hover:bg-dark-border rounded text-sm transition"
+                        title="Udostępnij z timestampem (U)"
+                    >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
+                        </svg>
+                    </button>
+
                     <!-- Keyboard Shortcuts Help -->
                     <button
                         id="keyboardHelpBtn"
@@ -446,6 +514,30 @@ include INCLUDES_PATH . '/templates/header.php';
                         <kbd class="px-2 py-1 bg-dark-tertiary rounded">0-9</kbd>
                     </div>
                 </div>
+
+                <div class="space-y-3">
+                    <h3 class="font-semibold text-base mb-2">Zaawansowane</h3>
+                    <div class="flex justify-between">
+                        <span class="text-dark-textSecondary">Mini player (PiP)</span>
+                        <kbd class="px-2 py-1 bg-dark-tertiary rounded">I</kbd>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-dark-textSecondary">Screenshot</span>
+                        <kbd class="px-2 py-1 bg-dark-tertiary rounded">S</kbd>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-dark-textSecondary">Stats for Nerds</span>
+                        <kbd class="px-2 py-1 bg-dark-tertiary rounded">P</kbd>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-dark-textSecondary">Cinema Mode (Zgaś światła)</span>
+                        <kbd class="px-2 py-1 bg-dark-tertiary rounded">C</kbd>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-dark-textSecondary">Udostępnij z timestampem</span>
+                        <kbd class="px-2 py-1 bg-dark-tertiary rounded">U</kbd>
+                    </div>
+                </div>
             </div>
 
             <div class="mt-6 pt-6 border-t border-dark-border">
@@ -561,6 +653,19 @@ include INCLUDES_PATH . '/templates/header.php';
         // Initialize player controls
         initializePlayerControls(videoPlayer);
 
+        // Check for timestamp parameter (t=123) in URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const timestamp = urlParams.get('t');
+        if (timestamp) {
+            const time = parseInt(timestamp);
+            if (!isNaN(time) && time > 0) {
+                videoPlayer.addEventListener('loadedmetadata', () => {
+                    videoPlayer.currentTime = time;
+                    showToast(`Przeskoczono do ${formatVideoTime(time)}`, 'info');
+                }, { once: true });
+            }
+        }
+
         // Add to history when video starts playing
         videoPlayer.addEventListener('play', () => {
             addToHistory(videoId);
@@ -632,6 +737,68 @@ include INCLUDES_PATH . '/templates/header.php';
             btn.classList.add('bg-dark-tertiary', 'hover:bg-dark-border');
             text.textContent = 'Do obejrzenia';
         }
+    }
+
+    // Initialize player controls
+    function initializePlayerControls(videoPlayer) {
+        if (!videoPlayer) return;
+
+        // Setup speed control
+        const speedControlBtn = document.getElementById('speedControlBtn');
+        const speedMenu = document.getElementById('speedMenu');
+        const speedOptions = document.querySelectorAll('.speed-option');
+
+        if (speedControlBtn && speedMenu) {
+            speedControlBtn.addEventListener('click', () => {
+                speedMenu.classList.toggle('hidden');
+            });
+
+            speedOptions.forEach(option => {
+                option.addEventListener('click', () => {
+                    const speed = parseFloat(option.dataset.speed);
+                    videoPlayer.playbackRate = speed;
+                    document.getElementById('speedValue').textContent = speed + 'x';
+                    speedMenu.classList.add('hidden');
+                });
+            });
+
+            // Close speed menu when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!speedControlBtn.contains(e.target) && !speedMenu.contains(e.target)) {
+                    speedMenu.classList.add('hidden');
+                }
+            });
+        }
+
+        // Setup theater mode button
+        const theaterModeBtn = document.getElementById('theaterModeBtn');
+        if (theaterModeBtn) {
+            theaterModeBtn.addEventListener('click', () => {
+                toggleTheaterMode();
+            });
+        }
+
+        // Setup autoplay button
+        const autoplayBtn = document.getElementById('autoplayBtn');
+        if (autoplayBtn) {
+            autoplayBtn.addEventListener('click', () => {
+                toggleAutoplay();
+            });
+        }
+    }
+
+    // Format time in seconds to MM:SS or HH:MM:SS
+    function formatVideoTime(seconds) {
+        if (isNaN(seconds)) return '00:00';
+
+        const hours = Math.floor(seconds / 3600);
+        const minutes = Math.floor((seconds % 3600) / 60);
+        const secs = Math.floor(seconds % 60);
+
+        if (hours > 0) {
+            return `${hours}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+        }
+        return `${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
     }
 
     // Setup keyboard shortcuts help modal

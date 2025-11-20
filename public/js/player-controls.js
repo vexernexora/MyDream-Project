@@ -448,6 +448,352 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ============================================
+// LOOP VIDEO
+// ============================================
+
+let isLooping = false;
+
+/**
+ * Toggle loop mode
+ */
+function toggleLoop() {
+    const videoPlayer = document.getElementById('videoPlayer');
+    if (!videoPlayer) return;
+
+    isLooping = !isLooping;
+    videoPlayer.loop = isLooping;
+
+    const button = document.getElementById('loopButton');
+    if (button) {
+        if (isLooping) {
+            button.classList.add('bg-white', 'text-black');
+            button.classList.remove('bg-dark-tertiary');
+            showToast('Zapętlanie włączone', 'info');
+        } else {
+            button.classList.remove('bg-white', 'text-black');
+            button.classList.add('bg-dark-tertiary');
+            showToast('Zapętlanie wyłączone', 'info');
+        }
+    }
+
+    savePreference('loop_mode', isLooping);
+}
+
+// ============================================
+// PICTURE-IN-PICTURE (MINI PLAYER)
+// ============================================
+
+/**
+ * Toggle Picture-in-Picture mode
+ */
+async function togglePiP() {
+    const videoPlayer = document.getElementById('videoPlayer');
+    if (!videoPlayer) return;
+
+    try {
+        if (document.pictureInPictureElement) {
+            await document.exitPictureInPicture();
+            showToast('Mini player wyłączony', 'info');
+        } else {
+            await videoPlayer.requestPictureInPicture();
+            showToast('Mini player włączony', 'info');
+        }
+    } catch (error) {
+        console.error('PiP error:', error);
+        showToast('Picture-in-Picture niedostępny', 'error');
+    }
+}
+
+// ============================================
+// SCREENSHOT CAPTURE
+// ============================================
+
+/**
+ * Przechwytuje screenshot z aktualnej klatki
+ */
+function captureScreenshot() {
+    const videoPlayer = document.getElementById('videoPlayer');
+    if (!videoPlayer) return;
+
+    try {
+        // Utwórz canvas
+        const canvas = document.createElement('canvas');
+        canvas.width = videoPlayer.videoWidth;
+        canvas.height = videoPlayer.videoHeight;
+
+        // Narysuj aktualną klatkę
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(videoPlayer, 0, 0, canvas.width, canvas.height);
+
+        // Pobierz jako PNG
+        canvas.toBlob((blob) => {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `screenshot-${Date.now()}.png`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            showToast('Screenshot zapisany', 'success');
+        });
+    } catch (error) {
+        console.error('Screenshot error:', error);
+        showToast('Nie udało się zrobić screenshota', 'error');
+    }
+}
+
+// ============================================
+// STATS FOR NERDS
+// ============================================
+
+let statsInterval = null;
+let statsVisible = false;
+
+/**
+ * Toggle Stats for Nerds overlay
+ */
+function toggleStats() {
+    statsVisible = !statsVisible;
+
+    if (statsVisible) {
+        showStatsOverlay();
+        statsInterval = setInterval(updateStats, 1000);
+    } else {
+        hideStatsOverlay();
+        if (statsInterval) {
+            clearInterval(statsInterval);
+            statsInterval = null;
+        }
+    }
+}
+
+/**
+ * Pokazuje overlay ze statystykami
+ */
+function showStatsOverlay() {
+    let overlay = document.getElementById('statsOverlay');
+
+    if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'statsOverlay';
+        overlay.className = 'absolute top-4 left-4 bg-black bg-opacity-90 text-white p-4 rounded-lg font-mono text-xs z-50 max-w-md';
+        overlay.style.pointerEvents = 'none';
+
+        const playerContainer = document.getElementById('playerContainer');
+        if (playerContainer) {
+            playerContainer.style.position = 'relative';
+            playerContainer.appendChild(overlay);
+        }
+    }
+
+    overlay.classList.remove('hidden');
+    updateStats();
+}
+
+/**
+ * Ukrywa overlay ze statystykami
+ */
+function hideStatsOverlay() {
+    const overlay = document.getElementById('statsOverlay');
+    if (overlay) {
+        overlay.classList.add('hidden');
+    }
+}
+
+/**
+ * Aktualizuje statystyki
+ */
+function updateStats() {
+    const videoPlayer = document.getElementById('videoPlayer');
+    const overlay = document.getElementById('statsOverlay');
+
+    if (!videoPlayer || !overlay) return;
+
+    const stats = {
+        'Resolution': `${videoPlayer.videoWidth}x${videoPlayer.videoHeight}`,
+        'Current Time': formatTime(videoPlayer.currentTime),
+        'Duration': formatTime(videoPlayer.duration),
+        'Playback Rate': `${videoPlayer.playbackRate}x`,
+        'Volume': `${Math.round(videoPlayer.volume * 100)}%`,
+        'Buffered': getBufferedPercentage(videoPlayer),
+        'Network State': getNetworkState(videoPlayer.networkState),
+        'Ready State': getReadyState(videoPlayer.readyState),
+        'Paused': videoPlayer.paused ? 'Yes' : 'No',
+        'Muted': videoPlayer.muted ? 'Yes' : 'No',
+        'Loop': videoPlayer.loop ? 'Yes' : 'No',
+    };
+
+    let html = '<div class="font-bold mb-2 text-red-500">Stats for Nerds</div>';
+    for (const [key, value] of Object.entries(stats)) {
+        html += `<div><span class="text-gray-400">${key}:</span> ${value}</div>`;
+    }
+
+    overlay.innerHTML = html;
+}
+
+/**
+ * Pobiera procent buforowania
+ */
+function getBufferedPercentage(video) {
+    if (video.buffered.length === 0) return '0%';
+    const buffered = video.buffered.end(video.buffered.length - 1);
+    const percentage = (buffered / video.duration) * 100;
+    return `${Math.round(percentage)}%`;
+}
+
+/**
+ * Pobiera nazwę stanu sieci
+ */
+function getNetworkState(state) {
+    const states = ['NETWORK_EMPTY', 'NETWORK_IDLE', 'NETWORK_LOADING', 'NETWORK_NO_SOURCE'];
+    return states[state] || 'Unknown';
+}
+
+/**
+ * Pobiera nazwę stanu gotowości
+ */
+function getReadyState(state) {
+    const states = ['HAVE_NOTHING', 'HAVE_METADATA', 'HAVE_CURRENT_DATA', 'HAVE_FUTURE_DATA', 'HAVE_ENOUGH_DATA'];
+    return states[state] || 'Unknown';
+}
+
+/**
+ * Formatuje czas w sekundach do MM:SS lub HH:MM:SS
+ */
+function formatTime(seconds) {
+    if (isNaN(seconds)) return '00:00';
+
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = Math.floor(seconds % 60);
+
+    if (hours > 0) {
+        return `${hours}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+    }
+    return `${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+}
+
+// ============================================
+// CINEMA MODE (LIGHTS OFF)
+// ============================================
+
+let cinemaMode = false;
+
+/**
+ * Toggle Cinema Mode - przyciemnia wszystko poza odtwarzaczem
+ */
+function toggleCinemaMode() {
+    cinemaMode = !cinemaMode;
+
+    let overlay = document.getElementById('cinemaOverlay');
+
+    if (cinemaMode) {
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.id = 'cinemaOverlay';
+            overlay.className = 'fixed inset-0 bg-black z-40 transition-opacity duration-300';
+            overlay.style.opacity = '0.85';
+            document.body.appendChild(overlay);
+
+            // Ustaw player na wierzchu
+            const playerContainer = document.getElementById('playerContainer');
+            if (playerContainer) {
+                playerContainer.style.position = 'relative';
+                playerContainer.style.zIndex = '50';
+            }
+        }
+
+        showToast('Światła zgaszone', 'info');
+    } else {
+        if (overlay) {
+            overlay.remove();
+        }
+
+        const playerContainer = document.getElementById('playerContainer');
+        if (playerContainer) {
+            playerContainer.style.zIndex = '';
+        }
+
+        showToast('Światła włączone', 'info');
+    }
+
+    savePreference('cinema_mode', cinemaMode);
+}
+
+// ============================================
+// SHARE WITH TIMESTAMP
+// ============================================
+
+/**
+ * Kopiuje link z aktualnym timestampem
+ */
+function shareWithTimestamp() {
+    const videoPlayer = document.getElementById('videoPlayer');
+    if (!videoPlayer) return;
+
+    const currentTime = Math.floor(videoPlayer.currentTime);
+    const url = new URL(window.location.href);
+    url.searchParams.set('t', currentTime);
+
+    // Kopiuj do schowka
+    navigator.clipboard.writeText(url.toString()).then(() => {
+        showToast(`Link skopiowany (od ${formatTime(currentTime)})`, 'success');
+    }).catch(() => {
+        // Fallback - pokaż w prompt
+        prompt('Skopiuj link:', url.toString());
+    });
+}
+
+// ============================================
+// KEYBOARD SHORTCUTS (EXTENDED)
+// ============================================
+
+// Rozszerzenie istniejących skrótów
+document.addEventListener('keydown', (e) => {
+    // Ignoruj jeśli focus na input/textarea
+    if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') {
+        return;
+    }
+
+    const videoPlayer = document.getElementById('videoPlayer');
+    if (!videoPlayer) return;
+
+    switch (e.key.toLowerCase()) {
+        case 'i':
+            // I - Toggle Mini Player (PiP)
+            e.preventDefault();
+            togglePiP();
+            break;
+
+        case 's':
+            // S - Screenshot
+            e.preventDefault();
+            captureScreenshot();
+            break;
+
+        case 'p':
+            // P - Toggle Stats for Nerds
+            e.preventDefault();
+            toggleStats();
+            break;
+
+        case 'c':
+            // C - Cinema Mode
+            e.preventDefault();
+            toggleCinemaMode();
+            break;
+
+        case 'u':
+            // U - Share with timestamp
+            e.preventDefault();
+            shareWithTimestamp();
+            break;
+    }
+}, true); // Use capture to run after the main keyboard handler
+
+// ============================================
 // EXPORT
 // ============================================
 
@@ -458,5 +804,11 @@ window.toggleTheaterMode = toggleTheaterMode;
 window.toggleAutoplay = toggleAutoplay;
 window.toggleMute = toggleMute;
 window.toggleFullscreen = toggleFullscreen;
+window.toggleLoop = toggleLoop;
+window.togglePiP = togglePiP;
+window.captureScreenshot = captureScreenshot;
+window.toggleStats = toggleStats;
+window.toggleCinemaMode = toggleCinemaMode;
+window.shareWithTimestamp = shareWithTimestamp;
 window.savePreference = savePreference;
 window.loadPreference = loadPreference;
