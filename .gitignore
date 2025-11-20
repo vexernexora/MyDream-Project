@@ -46,3 +46,10 @@ yarn.lock
 # OS
 Thumbs.db
 Desktop.ini
+
+# Worker files
+data/worker.pid
+data/logs/*.log
+data/queue/*.json
+data/downloads/*.json
+
