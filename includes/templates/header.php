@@ -5,6 +5,31 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
     <title><?= $pageTitle ?? 'Moja Biblioteka Wideo' ?></title>
 
+    <!-- PWA Meta Tags -->
+    <meta name="application-name" content="MyDream Video">
+    <meta name="description" content="Lokalny odtwarzacz wideo offline w stylu YouTube">
+    <meta name="theme-color" content="#0f0f0f">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="MyDream Video">
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/public/manifest.json">
+
+    <!-- Icons -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/public/img/icon-32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/public/img/icon-16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/public/img/icon-180.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="/public/img/icon-152.png">
+    <link rel="apple-touch-icon" sizes="144x144" href="/public/img/icon-144.png">
+    <link rel="apple-touch-icon" sizes="120x120" href="/public/img/icon-120.png">
+    <link rel="apple-touch-icon" sizes="114x114" href="/public/img/icon-114.png">
+    <link rel="apple-touch-icon" sizes="76x76" href="/public/img/icon-76.png">
+    <link rel="apple-touch-icon" sizes="72x72" href="/public/img/icon-72.png">
+    <link rel="apple-touch-icon" sizes="60x60" href="/public/img/icon-60.png">
+    <link rel="apple-touch-icon" sizes="57x57" href="/public/img/icon-57.png">
+
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
 
@@ -94,8 +119,92 @@
             aspect-ratio: 16 / 9;
         }
     </style>
+
+    <!-- Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/public/sw.js')
+                    .then(registration => {
+                        console.log('[PWA] Service Worker registered:', registration.scope);
+
+                        // Check for updates
+                        registration.addEventListener('updatefound', () => {
+                            const newWorker = registration.installing;
+                            newWorker.addEventListener('statechange', () => {
+                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                    // New version available
+                                    if (confirm('Dostępna jest nowa wersja aplikacji. Czy chcesz odświeżyć stronę?')) {
+                                        window.location.reload();
+                                    }
+                                }
+                            });
+                        });
+                    })
+                    .catch(error => {
+                        console.log('[PWA] Service Worker registration failed:', error);
+                    });
+            });
+
+            // Show install prompt
+            let deferredPrompt;
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                deferredPrompt = e;
+
+                // Show install button/banner
+                const installBanner = document.getElementById('installBanner');
+                if (installBanner) {
+                    installBanner.style.display = 'block';
+                }
+            });
+
+            // Handle install button click
+            window.installPWA = function() {
+                if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    deferredPrompt.userChoice.then((choiceResult) => {
+                        if (choiceResult.outcome === 'accepted') {
+                            console.log('[PWA] User accepted the install prompt');
+                        }
+                        deferredPrompt = null;
+
+                        const installBanner = document.getElementById('installBanner');
+                        if (installBanner) {
+                            installBanner.style.display = 'none';
+                        }
+                    });
+                }
+            };
+        }
+    </script>
 </head>
 <body class="bg-dark-bg text-dark-text min-h-screen">
+    <!-- PWA Install Banner -->
+    <div id="installBanner" class="hidden fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:max-w-sm z-50 bg-dark-secondary border border-dark-border rounded-lg shadow-lg p-4">
+        <div class="flex items-start gap-3">
+            <svg class="w-10 h-10 text-red-600 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M21.582,6.186c-0.23-0.86-0.908-1.538-1.768-1.768C18.254,4,12,4,12,4S5.746,4,4.186,4.418 c-0.86,0.23-1.538,0.908-1.768,1.768C2,7.746,2,12,2,12s0,4.254,0.418,5.814c0.23,0.86,0.908,1.538,1.768,1.768 C5.746,20,12,20,12,20s6.254,0,7.814-0.418c0.861-0.23,1.538-0.908,1.768-1.768C22,16.254,22,12,22,12S22,7.746,21.582,6.186z M10,15.464V8.536L16,12L10,15.464z"/>
+            </svg>
+            <div class="flex-1">
+                <h3 class="font-semibold mb-1">Zainstaluj aplikację</h3>
+                <p class="text-sm text-dark-textSecondary mb-3">Dodaj MyDream Video do ekranu głównego i używaj jak natywnej aplikacji</p>
+                <div class="flex gap-2">
+                    <button onclick="installPWA()" class="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-sm font-medium transition">
+                        Zainstaluj
+                    </button>
+                    <button onclick="document.getElementById('installBanner').style.display='none'" class="px-4 py-2 bg-dark-tertiary hover:bg-dark-border rounded-lg text-sm transition">
+                        Później
+                    </button>
+                </div>
+            </div>
+            <button onclick="document.getElementById('installBanner').style.display='none'" class="text-dark-textSecondary hover:text-dark-text">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+    </div>
     <!-- Navigation - YouTube Style -->
     <nav class="bg-dark-bg border-b border-dark-border sticky top-0 z-50">
         <div class="flex items-center justify-between h-14 lg:h-16 px-4 lg:px-6">
