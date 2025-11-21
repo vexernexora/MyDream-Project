@@ -249,11 +249,15 @@ process_queue() {
         log "INFO" "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
         log "INFO" "Przetwarzanie zadania: $(basename "$job_file")"
 
-        # Odczytaj dane zadania z JSON
-        local job_data=$(cat "$job_file")
-        local job_type=$(echo "$job_data" | grep -o '"type":"[^"]*"' | cut -d'"' -f4)
-        local job_url=$(echo "$job_data" | grep -o '"url":"[^"]*"' | cut -d'"' -f4)
-        local job_filename=$(echo "$job_data" | grep -o '"filename":"[^"]*"' | cut -d'"' -f4)
+        # Odczytaj dane zadania z JSON (użyj PHP do parsowania)
+        local job_data=$(php -r "
+            \$data = json_decode(file_get_contents('$job_file'), true);
+            echo \$data['type'] . '|' . \$data['url'] . '|' . \$data['filename'];
+        " 2>/dev/null)
+
+        local job_type=$(echo "$job_data" | cut -d'|' -f1)
+        local job_url=$(echo "$job_data" | cut -d'|' -f2)
+        local job_filename=$(echo "$job_data" | cut -d'|' -f3)
 
         log "INFO" "Typ: $job_type"
         log "INFO" "Plik: $job_filename"
