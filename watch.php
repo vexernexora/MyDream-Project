@@ -251,42 +251,84 @@ include INCLUDES_PATH . '/templates/header.php';
                 </p>
             </div>
 
-            <!-- User Actions (Favorite, Watch Later, Rating) -->
+            <!-- Engagement Section - YouTube Style -->
             <div class="mb-6 pb-6 border-b border-dark-border">
-                <div class="flex flex-wrap items-center gap-4">
+                <div class="engagement-buttons">
+                    <!-- Like/Dislike Container -->
+                    <div class="like-dislike-container">
+                        <button id="videoLikeBtn" class="like-btn" title="Lubię to">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"/>
+                            </svg>
+                            <span id="likeCount">0</span>
+                        </button>
+                        <div class="like-dislike-separator"></div>
+                        <button id="videoDislikeBtn" class="dislike-btn" title="Nie lubię tego">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="transform: rotate(180deg);">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"/>
+                            </svg>
+                            <span id="dislikeCount"></span>
+                        </button>
+                    </div>
+
                     <!-- Favorite Button -->
                     <button
                         id="favoriteBtn"
                         onclick="toggleFavorite('<?= htmlspecialchars($videoId) ?>', this)"
-                        class="px-4 py-2 bg-dark-tertiary hover:bg-dark-border rounded-lg transition flex items-center space-x-2"
+                        class="btn btn-secondary"
+                        style="padding: 10px 16px;"
                         title="Dodaj do ulubionych"
                     >
                         <svg id="favoriteIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
                         </svg>
-                        <span id="favoriteText">Dodaj do ulubionych</span>
+                        <span id="favoriteText">Ulubione</span>
                     </button>
 
                     <!-- Watch Later Button -->
                     <button
                         id="watchLaterBtn"
                         onclick="toggleWatchLater('<?= htmlspecialchars($videoId) ?>', this)"
-                        class="px-4 py-2 bg-dark-tertiary hover:bg-dark-border rounded-lg transition flex items-center space-x-2"
+                        class="btn btn-secondary"
+                        style="padding: 10px 16px;"
                         title="Dodaj do obejrzenia później"
                     >
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
-                        <span id="watchLaterText">Do obejrzenia</span>
+                        <span id="watchLaterText">Później</span>
                     </button>
 
-                    <!-- Rating Widget -->
-                    <div class="flex items-center space-x-2">
-                        <span class="text-sm text-dark-textSecondary">Twoja ocena:</span>
-                        <div id="ratingWidget" class="flex items-center space-x-1">
-                            <!-- Will be populated by JS -->
-                        </div>
-                    </div>
+                    <!-- Share Button -->
+                    <button
+                        onclick="shareVideo()"
+                        class="btn btn-secondary"
+                        style="padding: 10px 16px;"
+                        title="Udostępnij"
+                    >
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
+                        </svg>
+                        <span>Udostępnij</span>
+                    </button>
+
+                    <!-- Add to Playlist Button -->
+                    <button
+                        onclick="showPlaylistModal()"
+                        class="btn btn-secondary"
+                        style="padding: 10px 16px;"
+                        title="Zapisz"
+                    >
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        <span>Zapisz</span>
+                    </button>
+                </div>
+
+                <!-- Like Ratio Bar -->
+                <div id="likeRatioBar" class="progress-bar" style="margin-top: 12px;">
+                    <div class="like-ratio-fill progress-bar-fill"></div>
                 </div>
             </div>
 
@@ -335,7 +377,7 @@ include INCLUDES_PATH . '/templates/header.php';
         </div>
 
         <!-- Technical Info (Collapsible) -->
-        <div class="bg-dark-secondary rounded-lg border border-dark-border">
+        <div class="bg-dark-secondary rounded-lg border border-dark-border mb-6">
             <button
                 onclick="toggleTechnicalInfo()"
                 class="w-full px-6 py-4 flex items-center justify-between hover:bg-dark-tertiary transition"
@@ -376,6 +418,44 @@ include INCLUDES_PATH . '/templates/header.php';
                         <p><?= number_format($video['size']) ?></p>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <!-- Comments Section -->
+        <div class="comments-section">
+            <div class="comments-header">
+                <h2 id="commentsCount" class="comments-count">0 komentarzy</h2>
+                <select id="commentsSort" class="comments-sort">
+                    <option value="newest">Najnowsze</option>
+                    <option value="top">Najpopularniejsze</option>
+                    <option value="oldest">Najstarsze</option>
+                </select>
+            </div>
+
+            <!-- Comment Form -->
+            <form id="commentForm" class="comment-form">
+                <textarea
+                    id="commentInput"
+                    class="comment-input"
+                    placeholder="Dodaj komentarz..."
+                    rows="3"
+                ></textarea>
+                <div class="comment-form-actions">
+                    <input
+                        type="text"
+                        id="commentUsername"
+                        placeholder="Twoje imię (opcjonalne)"
+                        style="flex: 1; padding: 8px 12px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); font-size: 13px;"
+                    >
+                    <button type="submit" id="commentSubmitBtn" class="btn btn-primary" style="padding: 8px 20px; font-size: 14px;">
+                        Komentuj
+                    </button>
+                </div>
+            </form>
+
+            <!-- Comments Container -->
+            <div id="commentsContainer" class="mt-6">
+                <!-- Comments will be loaded here -->
             </div>
         </div>
     </div>
@@ -630,6 +710,8 @@ include INCLUDES_PATH . '/templates/header.php';
 
 <script src="/public/js/useractions.js"></script>
 <script src="/public/js/player-controls.js"></script>
+<script src="/public/js/comments.js"></script>
+<script src="/public/js/likes.js"></script>
 <script>
     const videoId = <?= json_encode($videoId) ?>;
     const similarVideos = <?= json_encode($similarVideos) ?>;
@@ -640,6 +722,12 @@ include INCLUDES_PATH . '/templates/header.php';
 
         // Load user actions state (favorite, watch later)
         await loadUserActionStates();
+
+        // Initialize like/dislike system
+        await initLikeSystem(videoId);
+
+        // Initialize comments system
+        await initComments(videoId);
 
         // Create rating widget
         createRatingWidget('ratingWidget', videoId);
@@ -860,6 +948,30 @@ include INCLUDES_PATH . '/templates/header.php';
             return;
         }
         deleteVideoFromLibrary(videoId);
+    }
+
+    // Share video function
+    function shareVideo() {
+        const url = window.location.href;
+        if (navigator.share) {
+            navigator.share({
+                title: <?= json_encode($video['title']) ?>,
+                text: 'Sprawdź ten film!',
+                url: url
+            }).catch(err => console.error('Share failed:', err));
+        } else {
+            // Fallback: copy to clipboard
+            navigator.clipboard.writeText(url).then(() => {
+                showToast('Link skopiowany do schowka!', 'success');
+            }).catch(err => {
+                prompt('Skopiuj link:', url);
+            });
+        }
+    }
+
+    // Show playlist modal (placeholder)
+    function showPlaylistModal() {
+        showToast('Funkcja playlist w przygotowaniu!', 'info');
     }
 </script>
 

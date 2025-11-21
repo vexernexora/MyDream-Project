@@ -54,71 +54,8 @@
         }
     </script>
 
-    <!-- Custom Styles -->
-    <style>
-        * {
-            scrollbar-width: thin;
-            scrollbar-color: #4a4a4a #0f0f0f;
-        }
-
-        *::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-
-        *::-webkit-scrollbar-track {
-            background: #0f0f0f;
-        }
-
-        *::-webkit-scrollbar-thumb {
-            background-color: #4a4a4a;
-            border-radius: 4px;
-        }
-
-        *::-webkit-scrollbar-thumb:hover {
-            background-color: #5a5a5a;
-        }
-
-        .video-card {
-            transition: all 0.15s ease;
-        }
-
-        .tag-badge {
-            transition: all 0.15s ease;
-        }
-
-        /* Smooth scrolling */
-        html {
-            scroll-behavior: smooth;
-        }
-
-        /* Better line clamping */
-        .line-clamp-1 {
-            display: -webkit-box;
-            -webkit-line-clamp: 1;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-
-        .line-clamp-2 {
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-
-        .line-clamp-3 {
-            display: -webkit-box;
-            -webkit-line-clamp: 3;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-
-        /* Better aspect ratio support */
-        .aspect-video {
-            aspect-ratio: 16 / 9;
-        }
-    </style>
+    <!-- Advanced CSS Framework -->
+    <link rel="stylesheet" href="/public/css/app.css">
 
     <!-- Service Worker Registration -->
     <script>
@@ -250,6 +187,21 @@
 
             <!-- Right: Actions -->
             <div class="flex items-center gap-2">
+                <!-- Theme Toggle -->
+                <button
+                    id="themeToggle"
+                    onclick="toggleTheme()"
+                    class="w-10 h-10 flex items-center justify-center hover:bg-dark-tertiary rounded-full transition"
+                    title="Przełącz tryb jasny/ciemny"
+                >
+                    <svg id="themeIconDark" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+                    </svg>
+                    <svg id="themeIconLight" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+                    </svg>
+                </button>
+
                 <!-- Refresh Button -->
                 <button
                     onclick="scanLibrary()"
