@@ -229,11 +229,69 @@ function clearFilters() {
 }
 
 // ============================================
+// THEME SWITCHER
+// ============================================
+
+/**
+ * Toggle between light and dark theme
+ */
+function toggleTheme() {
+    const html = document.documentElement;
+    const currentTheme = html.getAttribute('data-theme');
+    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+
+    html.setAttribute('data-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+
+    // Update icons
+    const darkIcon = document.getElementById('themeIconDark');
+    const lightIcon = document.getElementById('themeIconLight');
+
+    if (newTheme === 'light') {
+        darkIcon?.classList.add('hidden');
+        lightIcon?.classList.remove('hidden');
+        html.classList.remove('dark');
+    } else {
+        darkIcon?.classList.remove('hidden');
+        lightIcon?.classList.add('hidden');
+        html.classList.add('dark');
+    }
+
+    showToast(`Tryb ${newTheme === 'light' ? 'jasny' : 'ciemny'} włączony`, 'info');
+}
+
+/**
+ * Load theme preference
+ */
+function loadThemePreference() {
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    const html = document.documentElement;
+
+    html.setAttribute('data-theme', savedTheme);
+
+    const darkIcon = document.getElementById('themeIconDark');
+    const lightIcon = document.getElementById('themeIconLight');
+
+    if (savedTheme === 'light') {
+        darkIcon?.classList.add('hidden');
+        lightIcon?.classList.remove('hidden');
+        html.classList.remove('dark');
+    } else {
+        darkIcon?.classList.remove('hidden');
+        lightIcon?.classList.add('hidden');
+        html.classList.add('dark');
+    }
+}
+
+// ============================================
 // INITIALIZATION
 // ============================================
 
 document.addEventListener('DOMContentLoaded', () => {
     console.log('Offline Video App initialized');
+
+    // Load theme preference
+    loadThemePreference();
 
     const videoPlayer = document.getElementById('videoPlayer');
     if (videoPlayer) {
@@ -298,3 +356,5 @@ window.handleSearch = handleSearch;
 window.toggleTag = toggleTag;
 window.handleSort = handleSort;
 window.clearFilters = clearFilters;
+window.toggleTheme = toggleTheme;
+window.loadThemePreference = loadThemePreference;
