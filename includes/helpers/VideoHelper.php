@@ -411,12 +411,8 @@ class VideoHelper
      */
     public static function getThumbnailUrl(string $videoId): string
     {
-        $path = self::getThumbnailPath($videoId);
-        if (file_exists($path)) {
-            return '/data/thumbnails/' . $videoId . '.jpg';
-        }
-        // Fallback - placeholder
-        return '/public/img/no-thumbnail.jpg';
+        // Zawsze używaj endpoint do serwowania miniatur
+        return '/public/thumbnail.php?id=' . urlencode($videoId);
     }
 
     /**
