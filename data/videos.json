@@ -1,29 +1,4 @@
 {
-    "videos": [
-        {
-            "id": "c3e68e34d034164b02d9cf6a974229fa",
-            "filename": "test_download.torrent",
-            "relative_path": "test_download.torrent",
-            "title": "Test Download",
-            "description": "Film: Test Download (0:00)",
-            "tags": [
-                "Test"
-            ],
-            "category": "Edukacja",
-            "duration_seconds": 0,
-            "duration_formatted": "0:00",
-            "size": 0,
-            "size_formatted": "0 B",
-            "width": null,
-            "height": null,
-            "codec": null,
-            "fps": null,
-            "added_at": 1763683130,
-            "added_at_formatted": "2025-11-21 00:58:50",
-            "thumbnail_generated": false,
-            "ai_generated": false,
-            "source": "download"
-        }
-    ],
+    "videos": [],
     "last_scan": null
 }

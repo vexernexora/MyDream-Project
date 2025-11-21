@@ -35,8 +35,8 @@ unset($similar);
 $currentPage = 'watch';
 $pageTitle = $video['title'];
 
-// Ścieżka do filmu
-$videoPath = '/videos/' . $video['relative_path'];
+// Ścieżka do filmu (przez streaming endpoint)
+$videoPath = '/public/stream.php?id=' . urlencode($videoId);
 $thumbnailUrl = VideoHelper::getThumbnailUrl($videoId);
 
 include INCLUDES_PATH . '/templates/header.php';
@@ -55,7 +55,7 @@ include INCLUDES_PATH . '/templates/header.php';
                 poster="<?= htmlspecialchars($thumbnailUrl) ?>"
                 data-video-id="<?= htmlspecialchars($videoId) ?>"
             >
-                <source src="<?= htmlspecialchars($videoPath) ?>" type="video/<?= htmlspecialchars($video['codec'] ?? 'mp4') ?>">
+                <source src="<?= htmlspecialchars($videoPath) ?>" type="video/mp4">
                 Twoja przeglądarka nie obsługuje odtwarzania wideo.
             </video>
 
