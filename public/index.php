@@ -161,64 +161,73 @@ include INCLUDES_PATH . '/templates/header.php';
         </div>
     <?php else: ?>
         <!-- Video Cards Grid -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
             <?php foreach ($videos as $video): ?>
-                <div class="video-card bg-dark-secondary rounded-lg overflow-hidden border border-dark-border">
-                    <!-- Thumbnail -->
-                    <a href="/public/watch.php?id=<?= htmlspecialchars($video['id']) ?>" class="block">
-                        <div class="video-thumbnail relative group">
-                            <img
-                                src="<?= htmlspecialchars($video['thumbnail_url']) ?>"
-                                alt="<?= htmlspecialchars($video['title']) ?>"
-                                class="w-full h-full object-cover"
-                                onerror="this.src='/public/img/no-thumbnail.jpg'"
-                            >
-                            <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition flex items-center justify-center">
-                                <svg class="w-16 h-16 text-white opacity-0 group-hover:opacity-100 transition" fill="currentColor" viewBox="0 0 24 24">
+                <a href="/public/watch.php?id=<?= htmlspecialchars($video['id']) ?>" class="video-card">
+                    <!-- Thumbnail Container -->
+                    <div class="video-thumbnail">
+                        <img
+                            src="<?= htmlspecialchars($video['thumbnail_url']) ?>"
+                            alt="<?= htmlspecialchars($video['title']) ?>"
+                            loading="lazy"
+                            onerror="this.src='/public/img/no-thumbnail.jpg'"
+                        >
+
+                        <!-- Hover Overlay -->
+                        <div class="video-thumbnail-overlay">
+                            <div class="video-thumbnail-play">
+                                <svg fill="currentColor" viewBox="0 0 24 24">
                                     <path d="M8 5v14l11-7z"/>
                                 </svg>
                             </div>
-                            <span class="absolute bottom-2 right-2 bg-black bg-opacity-80 text-white text-xs px-2 py-1 rounded">
-                                <?= htmlspecialchars($video['duration_formatted']) ?>
-                            </span>
                         </div>
-                    </a>
 
-                    <!-- Info -->
-                    <div class="p-4">
-                        <a href="/public/watch.php?id=<?= htmlspecialchars($video['id']) ?>" class="block hover:text-red-600 transition">
-                            <h3 class="font-semibold text-lg mb-2 line-clamp-2">
-                                <?= htmlspecialchars($video['title']) ?>
-                            </h3>
-                        </a>
+                        <!-- Duration Badge -->
+                        <div class="video-duration-badge">
+                            <?= htmlspecialchars($video['duration_formatted']) ?>
+                        </div>
+                    </div>
 
-                        <p class="text-dark-textSecondary text-sm mb-3 line-clamp-2">
-                            <?= htmlspecialchars($video['description']) ?>
-                        </p>
+                    <!-- Video Info -->
+                    <div class="video-card-info">
+                        <h3 class="video-card-title">
+                            <?= htmlspecialchars($video['title']) ?>
+                        </h3>
 
-                        <!-- Tags -->
+                        <div class="video-card-meta">
+                            <div class="video-card-meta-item">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                                </svg>
+                                <span><?= htmlspecialchars($video['size_formatted']) ?></span>
+                            </div>
+                            <?php if (isset($video['width'], $video['height'])): ?>
+                            <div class="video-card-meta-item">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                                </svg>
+                                <span><?= $video['width'] ?>x<?= $video['height'] ?></span>
+                            </div>
+                            <?php endif; ?>
+                        </div>
+
+                        <!-- Tags (Compact) -->
                         <?php if (!empty($video['tags'])): ?>
-                            <div class="flex flex-wrap gap-1 mb-3">
-                                <?php foreach (array_slice($video['tags'], 0, 3) as $tag): ?>
-                                    <span class="px-2 py-1 bg-dark-tertiary text-dark-textSecondary text-xs rounded">
+                            <div class="video-tags">
+                                <?php foreach (array_slice($video['tags'], 0, 2) as $tag): ?>
+                                    <span class="tag-badge" onclick="event.preventDefault(); window.location.href='/public/index.php?tags=<?= urlencode($tag) ?>'">
                                         <?= htmlspecialchars($tag) ?>
                                     </span>
                                 <?php endforeach; ?>
-                                <?php if (count($video['tags']) > 3): ?>
-                                    <span class="px-2 py-1 bg-dark-tertiary text-dark-textSecondary text-xs rounded">
-                                        +<?= count($video['tags']) - 3 ?>
+                                <?php if (count($video['tags']) > 2): ?>
+                                    <span class="tag-badge">
+                                        +<?= count($video['tags']) - 2 ?>
                                     </span>
                                 <?php endif; ?>
                             </div>
                         <?php endif; ?>
-
-                        <!-- Meta -->
-                        <div class="flex items-center justify-between text-xs text-dark-textSecondary">
-                            <span><?= htmlspecialchars($video['size_formatted']) ?></span>
-                            <span><?= isset($video['width'], $video['height']) ? "{$video['width']}x{$video['height']}" : '' ?></span>
-                        </div>
                     </div>
-                </div>
+                </a>
             <?php endforeach; ?>
         </div>
     <?php endif; ?>
