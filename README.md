@@ -1,18 +1,26 @@
-# 🎬 Offline Video App
+# 🎬 MyDream Video App
 
-**Prosta, lokalna aplikacja webowa do zarządzania i odtwarzania filmów offline**
+**Profesjonalna aplikacja do zarządzania filmami z systemem importu z Mega.nz i URL**
 
-Elegancka aplikacja w stylu YouTube, działająca całkowicie lokalnie bez potrzeby połączenia z internetem. Automatycznie wykrywa filmy w folderze, generuje metadata z nazw plików i pozwala wygodnie przeglądać i odtwarzać swoją kolekcję.
+Elegancka aplikacja w stylu YouTube z zaawansowanym systemem importu. Automatycznie pobiera filmy z Mega.nz i URL w tle (background worker), generuje metadata z AI, pozwala wygodnie przeglądać i odtwarzać swoją kolekcję. Auto-update z GitHub.
 
 ![PHP 8+](https://img.shields.io/badge/PHP-8%2B-777BB4?logo=php)
 ![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3.x-38B2AC?logo=tailwind-css)
 
 ## ✨ Główne funkcje
 
+### 📥 Import i Pobieranie
+- **Import z Mega.nz** - automatyczne pobieranie w tle przez worker
+- **Import z URL** - dowolne bezpośrednie linki do filmów
+- **Upload plików** - przez przeglądarkę (drag & drop)
+- **Background Worker** - asynchroniczne pobieranie, działa w screen/nohup
+- **Queue System** - kolejkowanie i monitoring pobierań
+
 ### 🎥 Zarządzanie filmami
 - **Automatyczne skanowanie** folderu z filmami
-- **Automatyczne metadata** - tytuły, opisy i tagi z nazw plików
-- **Miniatury** - opcjonalnie z FFmpeg lub domyślne placeholdery
+- **AI Metadata** - tytuły, opisy i tagi generowane automatycznie
+- **FFmpeg Metadata** - rozdzielczość, długość, codec, FPS
+- **Automatyczne miniatury** - FFmpeg z fallback do placeholder
 - **Edycja danych** - ręczna modyfikacja tytułów, opisów i tagów
 - **Inteligentne tagowanie** - automatyczne wykrywanie słów kluczowych
 
@@ -23,10 +31,16 @@ Elegancka aplikacja w stylu YouTube, działająca całkowicie lokalnie bez potrz
 - **Responsywna siatka** filmów z podglądem
 
 ### 🎬 Odtwarzacz wideo
-- **HTML5 Video Player** z pełną obsługą kontroli
+- **Streaming z Range Requests** - pełna obsługa seekowania
+- **Keyboard Shortcuts** - jak na YouTube (J/K/L, Space, strzałki)
+- **Theater Mode** - rozszerzony widok
+- **Picture-in-Picture** - mini player podczas pracy
+- **Playback Speed** - 0.25x do 2x
+- **Cinema Mode** - zgaś światła
+- **Screenshot** - zrób zrzut z filmu
+- **Stats for Nerds** - szczegółowe statystyki
 - **Podobne filmy** - rekomendacje na podstawie tagów
-- **Pełne informacje** o filmie i metadata techniczne
-- **Edycja inline** - szybka edycja bez opuszczania strony
+- **Historia i kontynuacja** - wróć dokładnie tam gdzie skończyłeś
 
 ### 🎨 Interfejs
 - **Dark mode** - elegancki ciemny motyw inspirowany YouTube
@@ -34,6 +48,9 @@ Elegancka aplikacja w stylu YouTube, działająca całkowicie lokalnie bez potrz
 - **Animacje** - płynne przejścia i efekty hover
 - **Mobile-friendly** - w pełni responsywny na telefonie
 - **Sidebar menu** - wygodna nawigacja na mobile
+- **Auto-Update Banner** - automatyczne sprawdzanie aktualizacji z GitHub co 5min
+- **Ulubione & Watch Later** - organizacja biblioteki
+- **Rating System** - oceń filmy gwiazdkami
 
 ## 📋 Wymagania
 
@@ -43,8 +60,13 @@ Elegancka aplikacja w stylu YouTube, działająca całkowicie lokalnie bez potrz
   - `fileinfo`
 - **Serwer WWW** - Apache/Nginx lub PHP built-in server
 
+### Wymagane dla importu
+- **megatools** - do pobierania z Mega.nz: `sudo apt install megatools`
+- **wget lub curl** - do pobierania z URL (zwykle już zainstalowane)
+
 ### Opcjonalne
-- **FFmpeg** - do generowania miniaturek i metadata (aplikacja działa też bez tego!)
+- **FFmpeg** - do generowania miniaturek i metadata: `sudo apt install ffmpeg`
+- **screen** - do uruchamiania workera w sesji (opcjonalne, działa też bez)
 
 ## 🚀 Instalacja
 
@@ -93,63 +115,124 @@ Obsługiwane formaty:
 - MP4, MKV, AVI, MOV, WMV, FLV
 - WebM, MPEG, MPG, M4V, 3GP
 
-### 5. Uruchom serwer
+### 5. Uruchom download worker
+
+**WAŻNE:** Worker musi działać aby import z Mega.nz i URL działał!
+
+```bash
+# Uruchom workera w tle
+./workers/worker-control.sh start
+
+# Sprawdź status
+./workers/worker-control.sh status
+```
+
+### 6. Uruchom serwer
 
 ```bash
 php -S localhost:8000
 ```
 
-Otwórz: **http://localhost:8000**
+Otwórz: **http://localhost:8000/public/**
 
-### 6. Pierwsze uruchomienie
+### 7. Pierwsze użycie
 
-1. Otwórz aplikację w przeglądarce
-2. Kliknij **"Odśwież bibliotekę"** (ikona ↻ w prawym górnym rogu)
+**Opcja A: Import z Mega.nz lub URL**
+1. Otwórz aplikację
+2. Kliknij zakładkę "Mega.nz" lub "URL"
+3. Wklej link
+4. Kliknij "Importuj"
+5. Worker pobierze film w tle
+
+**Opcja B: Skanowanie istniejących filmów**
+1. Skopiuj filmy do `videos/`
+2. Kliknij **"Skanuj folder"** w UI
 3. Aplikacja automatycznie:
    - Zeskanuje folder `videos/`
    - Wygeneruje tytuły z nazw plików
    - Wykryje tagi ze słów kluczowych
-   - (Opcjonalnie) Wygeneruje miniatury jeśli FFmpeg dostępny
+   - Wygeneruje miniatury (jeśli FFmpeg dostępny)
    - Zapisze wszystko do `data/videos.json`
 
 ## 📁 Struktura projektu
 
 ```
 MyDream-Project/
-├── index.php              # Strona główna z listą filmów
-├── watch.php              # Odtwarzacz wideo
-├── settings.php           # Panel ustawień
-├── config.php             # Konfiguracja
+├── config.php             # Główna konfiguracja
+├── watch.php              # Strona odtwarzacza
+├── README.md              # Ten plik
+├── USAGE.md               # Pełny przewodnik użytkownika
 │
-├── data/
-│   ├── videos.json       # Baza danych filmów
-│   ├── thumbnails/       # Wygenerowane miniatury
-│   └── cache/            # Cache
+├── public/                # Aplikacja webowa
+│   ├── index.php         # Strona główna z biblioteką
+│   ├── stream.php        # Streaming endpoint (range requests)
+│   ├── thumbnail.php     # Thumbnail serving endpoint
+│   ├── js/
+│   │   ├── app.js        # Główna logika UI
+│   │   ├── import.js     # System importu
+│   │   ├── auto-update.js # Auto-update z GitHub
+│   │   ├── player-controls.js # Kontrolki odtwarzacza
+│   │   └── useractions.js # Ulubione, historia, rating
+│   └── api/              # REST API
+│       ├── import-download.php  # Dodaj do kolejki pobierania
+│       ├── auto-update.php      # System aktualizacji
+│       ├── check-tools.php      # Sprawdź dostępne narzędzia
+│       └── ...                  # Inne endpointy
 │
-├── videos/               # TUTAJ WRZUĆ SWOJE FILMY
+├── workers/              # System workerów (background jobs)
+│   ├── download-worker.sh       # Główny daemon
+│   ├── worker-control.sh        # Zarządzanie (start/stop/status)
+│   ├── add-video-helper.php     # Helper do dodawania do bazy
+│   ├── README.md                # Pełna dokumentacja workerów
+│   └── QUICKSTART-WORKERS.md    # Szybki start
 │
-├── includes/
-│   ├── helpers/
-│   │   ├── AIHelper.php      # Generowanie metadata z nazw plików
-│   │   ├── JsonHelper.php    # Zarządzanie JSON
-│   │   └── VideoHelper.php   # Obsługa FFmpeg, miniatury
-│   │
-│   └── templates/
-│       ├── header.php    # Header z nawigacją
-│       └── footer.php    # Footer
+├── data/                 # Dane aplikacji
+│   ├── videos.json      # Baza filmów (JSON)
+│   ├── thumbnails/      # Miniatury (generowane)
+│   ├── queue/           # Kolejka zadań dla workera
+│   ├── downloads/       # Status pobierania
+│   └── logs/            # Logi workera
+│       └── worker.log
 │
-└── public/
-    ├── js/app.js         # Główny JavaScript
-    └── api/              # REST API
+├── videos/              # TUTAJ SĄ TWOJE FILMY
+│
+└── includes/
+    ├── helpers/
+    │   ├── AIHelper.php       # AI metadata z nazw plików
+    │   ├── JsonHelper.php     # Zarządzanie JSON DB
+    │   └── VideoHelper.php    # FFmpeg, miniatury, streaming
+    └── templates/
+        ├── header.php         # Header z nawigacją
+        └── footer.php         # Footer
 ```
 
 ## 🎯 Użytkowanie
 
-### Podstawowe operacje
+**📖 Pełna dokumentacja:** [USAGE.md](USAGE.md)
 
-#### Dodawanie nowych filmów
+### Szybki Start
+
+#### 1. Uruchom Worker
+```bash
+./workers/worker-control.sh start
+```
+
+#### 2. Dodawanie filmów
+
+**Metoda A: Import z Mega.nz**
+1. Kliknij zakładkę "Mega.nz" w UI
+2. Wklej link (np. `https://mega.nz/file/...`)
+3. Kliknij "Importuj"
+4. Worker pobierze w tle
+
+**Metoda B: Import z URL**
+1. Kliknij zakładkę "URL"
+2. Wklej bezpośredni link do filmu
+3. Kliknij "Importuj"
+
+**Metoda C: Skanowanie lokalnych plików**
 1. Skopiuj pliki do folderu `videos/`
-2. Kliknij ikonę ↻ "Odśwież bibliotekę"
+2. Kliknij ikonę ↻ "Skanuj folder"
 3. Poczekaj na zakończenie skanowania
 
 #### Wyszukiwanie filmów
@@ -167,28 +250,53 @@ MyDream-Project/
 - Na stronie filmu kliknij "Regeneruj miniaturę"
 - Wymaga FFmpeg
 
-### Panel ustawień
+### Zarządzanie Workerem
 
-**Statystyki:**
-- Liczba filmów
-- Całkowity rozmiar
-- Łączny czas wszystkich filmów
-- Lista tagów
+```bash
+./workers/worker-control.sh start    # Uruchom
+./workers/worker-control.sh stop     # Zatrzymaj
+./workers/worker-control.sh restart  # Restart
+./workers/worker-control.sh status   # Sprawdź status
+./workers/worker-control.sh logs     # Zobacz logi na żywo
+```
 
-**Zarządzanie:**
-- Skanuj bibliotekę
-- Regeneruj wszystkie miniatury
-- Eksportuj dane (backup JSON)
-- Wyczyść cache
+### Auto-Update
 
-**Strefa niebezpieczna:**
-- Reset bazy danych (zachowuje pliki wideo)
-- Usuń wszystkie miniatury
+System automatycznie:
+- Sprawdza aktualizacje z GitHub co 5 minut
+- Pokazuje banner gdy dostępna nowa wersja
+- Pozwala zaktualizować jednym klikiem
+
+### Organizacja Biblioteki
+
+- **❤️ Ulubione** - dodaj do ulubionych klikając serce
+- **🕒 Watch Later** - dodaj do kolejki "obejrzyj później"
+- **⭐ Rating** - oceń filmy gwiazdkami
+- **📜 Historia** - system pamięta gdzie skończyłeś
+- **🏷️ Tagi** - kliknij tag aby filtrować
 
 ## ⌨️ Skróty klawiszowe
 
+**W odtwarzaczu:**
+- `Space / K` - Play/Pause
+- `J / L` - Przewiń -10s / +10s
+- `← / →` - Przewiń -5s / +5s
+- `↑ / ↓` - Głośność
+- `M` - Wycisz
+- `F` - Pełny ekran
+- `T` - Theater mode
+- `I` - Picture-in-Picture
+- `C` - Cinema mode (zgaś światła)
+- `S` - Screenshot
+- `P` - Stats for nerds
+- `U` - Udostępnij z timestampem
+- `>` / `<` - Zwiększ/zmniejsz prędkość
+- `R` - Reset prędkości (1x)
+- `0-9` - Przeskocz do % filmu
+- `?` - Pokaż wszystkie skróty
+
+**Globalnie:**
 - `Ctrl/Cmd + K` - Focus na wyszukiwarkę
-- `Spacja` - Play/Pause wideo (na stronie watch)
 - `Escape` - Zamknij modale
 
 ## 🔧 Konfiguracja
@@ -218,11 +326,40 @@ Aplikacja automatycznie wykrywa czy FFmpeg jest dostępny. Jeśli `exec()` jest 
 
 ## 🔧 Rozwiązywanie problemów
 
+### Worker nie działa
+
+```bash
+# Restart workera
+./workers/worker-control.sh restart
+
+# Zobacz błędy
+tail -f data/logs/worker.log
+
+# Sprawdź czy proces działa
+./workers/worker-control.sh status
+```
+
+### Import z Mega.nz nie działa
+
+```bash
+# Sprawdź megatools
+which megatools
+
+# Zainstaluj jeśli brakuje
+sudo apt install megatools
+
+# Sprawdź logi workera
+tail -f data/logs/worker.log
+```
+
 ### FFmpeg nie działa
 
 ```bash
 # Sprawdź czy FFmpeg jest zainstalowany
 ffmpeg -version
+
+# Zainstaluj jeśli brakuje
+sudo apt install ffmpeg
 
 # Sprawdź czy exec() nie jest wyłączony
 php -r "echo function_exists('exec') ? 'OK' : 'DISABLED';"
@@ -234,11 +371,13 @@ php -r "echo function_exists('exec') ? 'OK' : 'DISABLED';"
 - Upewnij się, że FFmpeg działa (lub będzie używany placeholder)
 - Sprawdź logi PHP
 
-### Filmy się nie odtwarzają
+### Filmy się nie odtwarzają (ikona przerwany papier)
 
-- Sprawdź czy format jest obsługiwany
-- Upewnij się, że przeglądarka wspiera codec
-- Sprawdź ścieżkę do pliku w konsoli przeglądarki
+- Sprawdź czy `public/stream.php` istnieje
+- Sprawdź uprawnienia: `chmod 755 videos/`
+- Sprawdź czy plik istnieje: `ls -la videos/`
+- Sprawdź console przeglądarki (F12) dla błędów
+- Sprawdź czy format jest obsługiwany przez przeglądarkę
 
 ### Błąd "Permission denied"
 
@@ -271,13 +410,17 @@ colors: {
 
 ## 🌟 Cechy techniczne
 
-- **Zero dependencies** - tylko PHP, TailwindCSS z CDN
+- **Background Workers** - Bash daemons z kolejkowaniem
+- **Streaming z Range Requests** - pełna obsługa seekowania
+- **Queue System** - asynchroniczne pobieranie
+- **Auto-Update** - aktualizacje z GitHub
 - **JSON database** - szybka, prosta, łatwa do backupu
 - **Opcjonalny FFmpeg** - działa też bez niego!
-- **Proste tagowanie** - ekstrahuje słowa kluczowe z nazw plików
+- **AI Metadata** - ekstrahuje metadata z nazw plików
 - **Modern UI** - TailwindCSS, YouTube style, responsywne
 - **REST API** - czysta architektura
-- **Clean code** - komentarze, czytelne
+- **Zero frontend dependencies** - tylko PHP, TailwindCSS z CDN
+- **Clean code** - komentarze, czytelne, modułowe
 
 ## 📝 Automatyczne tagowanie
 
@@ -292,10 +435,63 @@ Aplikacja rozpoznaje słowa kluczowe w nazwach plików:
 **Rozpoznawane kategorie:**
 - Gaming, Muzyka, Edukacja, Sport, Vlog, Film, Komedia
 
+## 📊 System Kolejkowania
+
+Proces pobierania:
+1. UI dodaje link → tworzy `data/queue/JOB_ID.json`
+2. Worker wykrywa zadanie → rozpoczyna pobieranie
+3. Status aktualizowany: `queued` → `downloading` → `completed`
+4. Worker dodaje film do bazy + generuje miniaturę
+5. Film pojawia się w bibliotece
+
+Monitorowanie:
+```bash
+# Status workera
+./workers/worker-control.sh status
+
+# Zadania w kolejce
+ls -la data/queue/
+
+# Status pobierania
+cat data/downloads/*.json
+
+# Logi na żywo
+tail -f data/logs/worker.log
+```
+
+## 🚀 Zaawansowane
+
+### API Endpoints
+
+- `GET /public/stream.php?id=VIDEO_ID` - Stream wideo
+- `GET /public/thumbnail.php?id=VIDEO_ID` - Miniatura
+- `POST /public/api/import-download.php` - Dodaj do kolejki
+- `GET /public/api/auto-update.php?action=check` - Sprawdź aktualizacje
+- `GET /public/api/check-tools.php` - Sprawdź narzędzia
+
+### Sprawdź Status Systemu
+
+```bash
+# Dostępne narzędzia
+php -r "require 'public/api/check-tools.php';"
+
+# Status workera
+./workers/worker-control.sh status
+
+# Auto-update
+php -r "\$_GET['action']='check'; require 'public/api/auto-update.php';"
+```
+
+## 📚 Dodatkowa Dokumentacja
+
+- **[USAGE.md](USAGE.md)** - Pełny przewodnik użytkownika
+- **[QUICKSTART-WORKERS.md](QUICKSTART-WORKERS.md)** - Szybki start z workerami
+- **[workers/README.md](workers/README.md)** - Szczegółowa dokumentacja workerów
+
 ## 📄 Licencja
 
-Projekt open-source - możesz swobodnie używać, modyfikować i dystrybuować.
+Projekt prywatny.
 
 ---
 
-**Enjoy your private video library! 🎬**
+**Ciesz się swoją biblioteką filmów! 🎬**
